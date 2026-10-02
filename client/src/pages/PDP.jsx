@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Heart, ShoppingBag, ShieldCheck, Award, Truck, Star, Check, HelpCircle, ChevronRight } from 'lucide-react';
+import { Heart, ShoppingBag, ShieldCheck, Award, Truck, Star, Check, HelpCircle } from 'lucide-react';
 import AnnouncementBar from '../components/common/AnnouncementBar';
 import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
@@ -201,7 +201,7 @@ export default function PDP() {
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
                   onClick={() => addToCart(product, 1, selectedSize, selectedMetal)}
-                  className="flex-1 bg-charcoal text-ivory text-xs font-semibold uppercase tracking-widest py-4 hover:bg-gold transition-colors flex items-center justify-center gap-2 shadow-luxury"
+                  className="flex-1 bg-[#D96B27] text-white text-xs font-semibold uppercase tracking-widest py-4 hover:bg-[#B85517] transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#D96B27]/25"
                 >
                   <ShoppingBag className="w-4 h-4" /> Add to Bag
                 </button>
@@ -211,13 +211,13 @@ export default function PDP() {
                       addToCart(product, 1, selectedSize, selectedMetal);
                       navigate('/checkout');
                     }}
-                    className="flex-1 sm:flex-none bg-gold text-white text-xs font-semibold uppercase tracking-widest px-6 py-4 hover:bg-gold-dark transition-colors text-center"
+                    className="flex-1 sm:flex-none bg-transparent border border-[#D96B27] text-[#D96B27] text-xs font-semibold uppercase tracking-widest px-6 py-4 hover:bg-[#D96B27] hover:text-white transition-all text-center shadow-sm"
                   >
                     Buy Now
                   </button>
                   <button
                     onClick={() => toggleWishlist(product)}
-                    className="p-4 border border-warm-border hover:border-gold transition-colors flex items-center justify-center"
+                    className="p-4 border border-warm-border hover:border-[#D96B27] transition-colors flex items-center justify-center"
                     aria-label="Wishlist"
                   >
                     <Heart className={`w-5 h-5 ${inWishlist ? 'text-red-500 fill-red-500' : 'text-charcoal'}`} />

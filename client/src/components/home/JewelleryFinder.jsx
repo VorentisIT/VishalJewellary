@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, ChevronDown } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 
 export default function JewelleryFinder() {
   const [occasion, setOccasion] = useState('');
@@ -11,17 +11,19 @@ export default function JewelleryFinder() {
 
   const handleFindPiece = (e) => {
     e.preventDefault();
-    let priceQuery = '';
-    if (budget === 'Under ₹25K') priceQuery = 'maxPrice=25000';
-    if (budget === '₹25K–₹50K') priceQuery = 'minPrice=25000&maxPrice=50000';
-    if (budget === '₹50K–₹1L') priceQuery = 'minPrice=50000&maxPrice=100000';
-    if (budget === '₹1L+') priceQuery = 'minPrice=100000';
+    const params = new URLSearchParams();
+    if (metal) params.set('metal', metal);
+    if (occasion) params.set('occasion', occasion === 'Wedding' ? 'Bridal & Wedding' : occasion === 'Everyday' ? 'Everyday Luxury' : occasion === 'Gift' ? 'Gifting' : occasion);
+    if (budget === 'Under ₹25K') params.set('maxPrice', '25000');
+    if (budget === '₹25K–₹50K') { params.set('minPrice', '25000'); params.set('maxPrice', '50000'); }
+    if (budget === '₹50K–₹1L') { params.set('minPrice', '50000'); params.set('maxPrice', '100000'); }
+    if (budget === '₹1L+') params.set('minPrice', '100000');
 
-    navigate(`/jewellery?metal=${encodeURIComponent(metal)}&${priceQuery}`);
+    navigate(`/jewellery?${params.toString()}`);
   };
 
   return (
-    <section className="bg-[#F5EFE6] py-16 lg:py-20 border-b border-[#DED8CC] relative overflow-hidden">
+    <section className="bg-[#F5EFE6] py-8 sm:py-10 border-b border-[#DED8CC] relative overflow-hidden">
       
       {/* Left Botanical Leaves SVG Decor */}
       <svg
@@ -45,7 +47,7 @@ export default function JewelleryFinder() {
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         
-        <div className="text-center max-w-xl mx-auto mb-9 space-y-1.5">
+        <div className="text-center max-w-xl mx-auto mb-6 space-y-1">
           <span className="text-[10px] font-semibold tracking-[0.28em] text-[#C49A5A] uppercase block font-sans">
             A MORE PERSONAL WAY TO SHOP
           </span>
@@ -129,9 +131,9 @@ export default function JewelleryFinder() {
           <div className="text-center pt-2">
             <button
               type="submit"
-              className="bg-[#102C24] text-[#F8F5EE] text-xs font-semibold uppercase tracking-widest px-10 py-3.5 hover:bg-[#C49A5A] transition-colors inline-flex items-center gap-3 shadow-md"
+              className="bg-[#D96B27] text-white text-xs font-semibold uppercase tracking-widest px-10 py-3.5 hover:bg-[#B85517] transition-all inline-flex items-center gap-3 shadow-md shadow-[#D96B27]/25"
             >
-              SHOW RECOMMENDED PIECES →
+              SHOW RECOMMENDED PIECES
             </button>
           </div>
         </form>

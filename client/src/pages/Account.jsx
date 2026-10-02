@@ -94,9 +94,9 @@ export default function Account() {
             {user.role === 'admin' && (
               <Link
                 to="/admin"
-                className="bg-[#102C24] text-[#F8F5EE] text-xs font-semibold uppercase tracking-widest px-4 py-2.5 hover:bg-[#C49A5A] transition-colors"
+                className="bg-[#D96B27] text-white text-xs font-semibold uppercase tracking-widest px-4 py-2.5 hover:bg-[#B85517] transition-all shadow-sm"
               >
-                Go to Admin Dashboard →
+                Go to Admin Dashboard
               </Link>
             )}
             <button
@@ -119,28 +119,28 @@ export default function Account() {
             <button
               onClick={() => setActiveTab('orders')}
               className={`w-full flex items-center gap-3 p-3 text-xs font-semibold uppercase tracking-widest text-left border transition-colors ${
-                activeTab === 'orders' ? 'border-[#C49A5A] bg-[#EFE7D8] text-[#202522]' : 'border-[#DED8CC] text-[#77736B] hover:text-[#202522]'
+                activeTab === 'orders' ? 'border-[#D96B27] bg-[#D96B27]/10 text-[#D96B27] font-bold' : 'border-[#DED8CC] text-[#77736B] hover:text-[#202522]'
               }`}
             >
-              <Package className="w-4 h-4 text-[#C49A5A]" /> Orders & Tracking
+              <Package className="w-4 h-4 text-[#D96B27]" /> Orders & Tracking
             </button>
 
             <button
               onClick={() => setActiveTab('wishlist')}
               className={`w-full flex items-center gap-3 p-3 text-xs font-semibold uppercase tracking-widest text-left border transition-colors ${
-                activeTab === 'wishlist' ? 'border-[#C49A5A] bg-[#EFE7D8] text-[#202522]' : 'border-[#DED8CC] text-[#77736B] hover:text-[#202522]'
+                activeTab === 'wishlist' ? 'border-[#D96B27] bg-[#D96B27]/10 text-[#D96B27] font-bold' : 'border-[#DED8CC] text-[#77736B] hover:text-[#202522]'
               }`}
             >
-              <Heart className="w-4 h-4 text-[#C49A5A]" /> Saved Wishlist ({wishlist.length})
+              <Heart className="w-4 h-4 text-[#D96B27]" /> Saved Wishlist ({wishlist.length})
             </button>
 
             <button
               onClick={() => setActiveTab('addresses')}
               className={`w-full flex items-center gap-3 p-3 text-xs font-semibold uppercase tracking-widest text-left border transition-colors ${
-                activeTab === 'addresses' ? 'border-[#C49A5A] bg-[#EFE7D8] text-[#202522]' : 'border-[#DED8CC] text-[#77736B] hover:text-[#202522]'
+                activeTab === 'addresses' ? 'border-[#D96B27] bg-[#D96B27]/10 text-[#D96B27] font-bold' : 'border-[#DED8CC] text-[#77736B] hover:text-[#202522]'
               }`}
             >
-              <MapPin className="w-4 h-4 text-[#C49A5A]" /> Saved Addresses
+              <MapPin className="w-4 h-4 text-[#D96B27]" /> Saved Addresses
             </button>
           </div>
 

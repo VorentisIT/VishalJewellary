@@ -4,11 +4,11 @@ import { Instagram, Facebook, Youtube, Mail, Phone, MapPin, Globe } from 'lucide
 
 export default function Footer() {
   return (
-    <footer className="bg-[#102C24] text-[#F8F5EE] pt-16 pb-8 border-t border-[#0A1D18] font-sans">
+    <footer className="bg-[#102C24] text-[#F8F5EE] pt-10 pb-6 border-t border-[#0A1D18] font-sans">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Main Footer 4 Columns Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 pb-12 border-b border-[#173D32]">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 pb-8 border-b border-[#173D32]">
           
           {/* Brand Column (2 cols) */}
           <div className="lg:col-span-2 space-y-4 pr-4">
@@ -85,10 +85,8 @@ export default function Footer() {
             <a href="#cookies" className="hover:text-[#C49A5A]">Cookies</a>
           </div>
 
-          <div className="flex items-center space-x-4 text-[#F8F5EE]/80 font-mono">
-            <span>INR ₹</span>
-            <span>•</span>
-            <span>English ∨</span>
+          <div className="flex items-center text-[11px] text-[#F8F5EE]/70">
+            <span>Developed by <a href="https://vorentis-it.com" target="_blank" rel="noopener noreferrer" className="text-[#C49A5A] hover:text-[#F8F5EE] font-medium transition-colors">vorentis-it.com</a></span>
           </div>
         </div>
 

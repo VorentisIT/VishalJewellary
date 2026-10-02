@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Lock, Mail, User, ShieldCheck, ArrowRight } from 'lucide-react';
+import { Lock, Mail, User, ShieldCheck } from 'lucide-react';
 import AnnouncementBar from '../components/common/AnnouncementBar';
 import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
@@ -140,16 +140,16 @@ export default function Login() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-[#102C24] text-[#F8F5EE] text-xs font-semibold uppercase tracking-widest py-4 hover:bg-[#C49A5A] transition-colors flex items-center justify-center gap-2 shadow-md"
+              className="w-full bg-[#D96B27] text-white text-xs font-semibold uppercase tracking-widest py-4 hover:bg-[#B85517] transition-all flex items-center justify-center gap-2 shadow-md shadow-[#D96B27]/25"
             >
-              {isLoading ? 'Authenticating...' : (isRegisterMode ? 'Create Account' : 'Sign In')} <ArrowRight className="w-4 h-4" />
+              {isLoading ? 'Authenticating...' : (isRegisterMode ? 'Create Account' : 'Sign In')}
             </button>
           </form>
 
           <div className="text-center pt-2 text-xs border-t border-[#DED8CC]">
             <button
               onClick={() => setIsRegisterMode(!isRegisterMode)}
-              className="text-[#C49A5A] hover:underline font-semibold"
+              className="text-[#D96B27] hover:underline font-semibold"
             >
               {isRegisterMode ? 'Already have an account? Sign In' : "Don't have an account? Create One"}
             </button>

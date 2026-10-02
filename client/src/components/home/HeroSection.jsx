@@ -1,113 +1,173 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { ArrowRight, ShieldCheck, Truck, RefreshCw, Gift } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ShieldCheck, Truck, RefreshCw, Gift, Award, Sparkles } from 'lucide-react';
+
+const heroSlides = [
+  {
+    id: 1,
+    image: '/assets/hero_saffron_gold_solitaire.jpg',
+    headingStart: 'Brilliance That',
+    headingItalic: 'Defines',
+    headingEnd: 'True Perfection.',
+    subtext: 'Masterfully faceted radiant solitaire diamonds set in handcrafted 18K warm yellow gold.'
+  },
+  {
+    id: 2,
+    image: '/assets/hero_saffron_amber_necklace.jpg',
+    headingStart: 'Heirlooms For',
+    headingItalic: 'Beginnings',
+    headingEnd: 'Worth Celebrating.',
+    subtext: 'Grand 22K solid gold bridal chokers adorned with vibrant saffron gemstones and uncut polki diamonds.'
+  },
+  {
+    id: 3,
+    image: '/assets/hero_emerald_suite.jpg',
+    headingStart: 'Jewellery Made to',
+    headingItalic: 'Become',
+    headingEnd: 'Part of Your Story.',
+    subtext: 'Zambian emerald pendants and timeless brilliant cut diamonds designed for life’s milestone moments.'
+  },
+  {
+    id: 4,
+    image: '/assets/hero_royal_polki.jpg',
+    headingStart: 'Crafted With Intention.',
+    headingItalic: 'Worn With',
+    headingEnd: 'Timeless Meaning.',
+    subtext: 'Certified 18K & 22K hallmarked gold creations designed with uncompromising artisanal precision.'
+  }
+];
+
+const servicePromises = [
+  { icon: ShieldCheck, title: 'Certified Hallmarked Gold' },
+  { icon: Truck, title: 'Free Insured Express Delivery' },
+  { icon: RefreshCw, title: '15-Day Return & Lifetime Exchange' },
+  { icon: Gift, title: 'Luxury Velvet Gift Packaging' },
+  { icon: Award, title: '100% GIA & IGI Certified' },
+  { icon: Sparkles, title: 'Handcrafted by Master Artisans' }
+];
 
 export default function HeroSection() {
+  const [currentIdx, setCurrentIdx] = useState(0);
+
+  // Auto-slide loop
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentIdx((prev) => (prev + 1) % heroSlides.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const slide = heroSlides[currentIdx];
+
+  // Quadruple promises for seamless continuous infinite slide
+  const infinitePromises = [
+    ...servicePromises,
+    ...servicePromises,
+    ...servicePromises,
+    ...servicePromises
+  ];
+
   return (
-    <section className="relative bg-[#F8F5EE] overflow-hidden border-b border-[#DED8CC]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-14">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
-          
-          {/* Left Column Content (45%) */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="lg:col-span-5 space-y-5 text-left"
-          >
-            <div className="text-[10px] font-semibold tracking-[0.3em] text-[#C49A5A] uppercase font-sans">
-              TIMELESS ELEGANCE
-            </div>
+    <section className="relative w-full bg-[#F8F5EE] border-b border-[#DED8CC] flex items-center overflow-hidden lg:min-h-[560px]">
+      
+      {/* 1. Full-Width Background Cover Image Slider */}
+      <div className="absolute inset-0 z-0 overflow-hidden">
+        <AnimatePresence mode="wait">
+          <motion.img
+            key={slide.image}
+            src={slide.image}
+            alt={slide.headingStart}
+            initial={{ opacity: 0, scale: 1.04 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.98 }}
+            transition={{ duration: 1.2, ease: 'easeInOut' }}
+            className="w-full h-full object-cover object-[75%_center] sm:object-right md:object-right lg:object-[center_right] select-none"
+          />
+        </AnimatePresence>
 
-            <h1 className="font-serif text-4xl sm:text-5xl lg:text-[3.5rem] font-normal leading-[1.12] text-[#202522] tracking-tight">
-              Jewellery Made to <br />
-              <span className="italic font-serif font-light text-[#B58E53]">Become</span> Part of <br />
-              Your Story.
-            </h1>
+        {/* Soft luxury gradient */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#F8F5EE] via-[#F8F5EE]/85 to-transparent md:bg-gradient-to-r md:from-[#F8F5EE] md:via-[#F8F5EE]/85 md:to-transparent w-full md:w-[62%] lg:w-[54%] z-10 pointer-events-none" />
+      </div>
 
-            <p className="text-xs sm:text-sm text-[#77736B] max-w-md leading-relaxed font-sans font-light">
-              Exquisite craft. Meaningful designs. For every milestone, and every moment in-between.
-            </p>
+      {/* 2. Foreground Editorial Content with Zero Excess Bottom Gap */}
+      <div className="relative z-20 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-24 lg:pt-28 pb-4 sm:pb-6">
+        <div className="max-w-xl space-y-4 sm:space-y-5 text-left">
 
-            {/* Action Buttons */}
-            <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          {/* Main Headline & Description */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={slide.id}
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.5 }}
+              className="space-y-3.5 sm:space-y-5 mt-4 sm:mt-6 lg:mt-8"
+            >
+              <h1 className="font-serif text-3xl sm:text-4xl lg:text-[3.3rem] font-normal leading-[1.2] sm:leading-[1.24] lg:leading-[1.28] text-[#202522] tracking-tight">
+                {slide.headingStart} <br />
+                <span className="italic font-serif font-light text-[#D96B27]">{slide.headingItalic}</span> {slide.headingEnd}
+              </h1>
+
+              <p className="text-xs sm:text-sm text-[#77736B] max-w-md leading-relaxed sm:leading-loose font-sans font-light">
+                {slide.subtext}
+              </p>
+            </motion.div>
+          </AnimatePresence>
+
+          {/* Action Buttons */}
+          <div className="pt-1 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}>
               <Link
                 to="/jewellery"
-                className="bg-[#B58E53] text-white text-[11px] font-semibold uppercase tracking-widest px-7 py-3.5 hover:bg-[#9E7B44] transition-colors flex items-center justify-center gap-2 group shadow-sm"
+                className="w-full bg-[#D96B27] text-white text-[11px] font-semibold uppercase tracking-widest px-7 py-3.5 hover:bg-[#B85517] transition-all flex items-center justify-center shadow-md shadow-[#D96B27]/25 text-center"
               >
-                SHOP THE COLLECTION <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                SHOP THE COLLECTION
               </Link>
+            </motion.div>
 
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}>
               <Link
                 to="/jewellery?newArrival=true"
-                className="bg-transparent border border-[#202522] text-[#202522] text-[11px] font-semibold uppercase tracking-widest px-6 py-3.5 hover:border-[#C49A5A] hover:text-[#C49A5A] transition-colors text-center"
+                className="w-full bg-white/90 backdrop-blur-sm border border-[#D96B27] text-[#D96B27] text-[11px] font-semibold uppercase tracking-widest px-6 py-3.5 hover:bg-[#D96B27] hover:text-white transition-all text-center shadow-sm block"
               >
                 EXPLORE NEW ARRIVALS
               </Link>
+            </motion.div>
+          </div>
+
+          {/* Automatic Horizontally Sliding Service Promises with Increased Icon Height */}
+          <div className="pt-3.5 border-t border-[#DED8CC] w-full overflow-hidden">
+            <div className="animate-slide-continuous flex items-center gap-8 py-1 select-none">
+              {infinitePromises.map((item, idx) => {
+                const IconComponent = item.icon;
+                return (
+                  <div
+                    key={idx}
+                    className="flex items-center gap-2.5 whitespace-nowrap text-xs text-[#202522] font-medium transition-colors"
+                  >
+                    <IconComponent className="w-5 h-5 sm:w-6 sm:h-6 text-[#D96B27] flex-shrink-0" />
+                    <span className="tracking-wide text-[11px] sm:text-xs">{item.title}</span>
+                    <span className="text-[#D96B27]/40 text-xs ml-4">✦</span>
+                  </div>
+                );
+              })}
             </div>
+          </div>
 
-            {/* 4 Service Badges */}
-            <div className="pt-4 grid grid-cols-2 sm:grid-cols-4 gap-2 text-[10px] text-[#77736B]">
-              <div className="flex items-center gap-1.5">
-                <ShieldCheck className="w-3.5 h-3.5 text-[#C49A5A] flex-shrink-0" />
-                <span>Certified Hallmarked Gold</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <Truck className="w-3.5 h-3.5 text-[#C49A5A] flex-shrink-0" />
-                <span>Secure Insured Delivery</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <RefreshCw className="w-3.5 h-3.5 text-[#C49A5A] flex-shrink-0" />
-                <span>Lifetime Exchange</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <Gift className="w-3.5 h-3.5 text-[#C49A5A] flex-shrink-0" />
-                <span>Luxury Gift Packaging</span>
-              </div>
-            </div>
-
-            {/* Pagination numbers indicator */}
-            <div className="pt-4 flex items-center gap-4 text-xs text-[#77736B] font-serif tracking-widest">
-              <span className="text-[#202522] font-bold border-b border-[#C49A5A] pb-0.5">01</span>
-              <span>—</span>
-              <span>02</span>
-              <span>—</span>
-              <span>03</span>
-            </div>
-          </motion.div>
-
-          {/* Right Column Campaign Image (55%) */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.9, delay: 0.15 }}
-            className="lg:col-span-7 relative"
-          >
-            <div className="w-full relative overflow-hidden rounded-sm">
-              <img
-                src="/assets/hero_lifestyle.jpg"
-                alt="Luxury Jewellery Model"
-                className="w-full h-[460px] sm:h-[580px] object-cover"
-              />
-
-              {/* Top Right Script Watermark */}
-              <div className="absolute right-6 top-8 text-right font-serif italic text-white/90 drop-shadow-md select-none leading-tight">
-                <span className="block text-sm sm:text-base tracking-widest font-light">More Than</span>
-                <span className="block text-base sm:text-lg tracking-widest font-normal text-[#D9BC86]">Jewellery</span>
-                <span className="block text-sm sm:text-base tracking-widest font-light">A Feeling</span>
-              </div>
-
-              {/* Bottom Right Controls */}
-              <div className="absolute right-4 bottom-4 flex items-center gap-2 bg-black/40 backdrop-blur-sm text-white px-3 py-1 text-xs rounded border border-white/20">
-                <button className="hover:text-[#C49A5A] p-1">‹</button>
-                <span className="text-white/40">|</span>
-                <button className="hover:text-[#C49A5A] p-1">›</button>
-              </div>
-            </div>
-          </motion.div>
         </div>
       </div>
+
+      {/* Floating Right-Side Hallmark Badge */}
+      <div className="hidden lg:block absolute bottom-5 right-8 z-20 bg-charcoal/80 backdrop-blur-md px-4 py-2 border border-white/20 text-ivory text-left shadow-2xl">
+        <span className="text-[9px] font-bold uppercase tracking-widest text-[#D96B27] block">
+          Certified Handcrafted Fine Jewellery
+        </span>
+        <span className="font-serif text-xs text-white block">
+          BIS Hallmarked • GIA & IGI Certified
+        </span>
+      </div>
+
     </section>
   );
 }

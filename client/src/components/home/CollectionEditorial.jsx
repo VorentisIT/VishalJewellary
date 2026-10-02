@@ -1,12 +1,19 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Play } from 'lucide-react';
+import { Play } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export default function CollectionEditorial() {
   return (
-    <section className="bg-[#F8F5EE] py-14 lg:py-20 border-b border-[#DED8CC] overflow-hidden">
+    <section className="bg-[#F8F5EE] py-8 sm:py-10 border-b border-[#DED8CC] overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-0 border border-[#DED8CC] shadow-xl overflow-hidden rounded-sm">
+        <motion.div
+          initial={{ opacity: 0, y: 35 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-60px' }}
+          transition={{ duration: 0.8, ease: 'easeOut' }}
+          className="grid grid-cols-1 lg:grid-cols-12 gap-0 border border-[#DED8CC] shadow-xl overflow-hidden rounded-sm"
+        >
           
           {/* Left Column: Large Bridal Photography */}
           <div className="lg:col-span-6 image-zoom-container relative min-h-[420px] lg:min-h-[500px]">
@@ -16,12 +23,14 @@ export default function CollectionEditorial() {
               className="w-full h-full object-cover"
             />
             {/* Watch Our Story Pill */}
-            <button
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => alert("Playing Aurélia Bridal Story video...")}
               className="absolute bottom-6 left-6 z-10 bg-black/50 backdrop-blur-md border border-white/30 text-white text-[10px] font-semibold uppercase tracking-widest px-4 py-2 rounded-full flex items-center gap-2 hover:bg-black/70 transition-colors"
             >
               <Play className="w-3 h-3 fill-white text-white" /> WATCH OUR STORY
-            </button>
+            </motion.button>
           </div>
 
           {/* Right Column: Deep Forest Green Card */}
@@ -54,9 +63,9 @@ export default function CollectionEditorial() {
               <div className="pt-2">
                 <Link
                   to="/jewellery?category=Bridal"
-                  className="inline-flex items-center gap-3 bg-[#B58E53] text-white text-xs font-semibold uppercase tracking-widest px-8 py-3.5 hover:bg-[#9E7B44] transition-colors shadow-sm"
+                  className="inline-flex items-center gap-3 bg-[#D96B27] text-white text-xs font-semibold uppercase tracking-widest px-8 py-3.5 hover:bg-[#B85517] transition-all shadow-md shadow-[#D96B27]/25"
                 >
-                  EXPLORE BRIDAL <ArrowRight className="w-4 h-4" />
+                  EXPLORE BRIDAL
                 </Link>
               </div>
             </div>
@@ -66,7 +75,7 @@ export default function CollectionEditorial() {
               L O V E • T R A D I T I O N • F O R E V E R
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );

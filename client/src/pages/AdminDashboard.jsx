@@ -23,7 +23,6 @@ import {
   ShieldCheck,
   Eye,
   SlidersHorizontal,
-  ArrowUpRight,
   Activity,
   Sparkles,
   CreditCard,
@@ -375,7 +374,6 @@ export default function AdminDashboard() {
               <BarChart2 className="w-4 h-4" />
               <span>Overview</span>
             </div>
-            <ArrowUpRight className="w-3.5 h-3.5 opacity-60 hidden md:block" />
           </button>
 
           <button
@@ -1096,7 +1094,7 @@ export default function AdminDashboard() {
                 >
                   Cancel
                 </button>
-                <button type="submit" className="px-6 py-2 bg-[#C49A5A] text-[#0A1A15] font-bold uppercase tracking-wider text-xs">
+                <button type="submit" className="px-6 py-2 bg-[#D96B27] text-white font-bold uppercase tracking-wider text-xs hover:bg-[#B85517] transition-all shadow-md shadow-[#D96B27]/20">
                   Save Product
                 </button>
               </div>
@@ -1108,8 +1106,8 @@ export default function AdminDashboard() {
       {/* Coupon Modal */}
       {isCouponModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[#121614] border border-[#C49A5A] max-w-md w-full p-6 space-y-4 rounded-sm shadow-2xl animate-fadeIn">
-            <h3 className="font-serif text-xl font-bold text-[#C49A5A]">Create Promotion Code</h3>
+          <div className="bg-[#121614] border border-[#D96B27] max-w-md w-full p-6 space-y-4 rounded-sm shadow-2xl animate-fadeIn">
+            <h3 className="font-serif text-xl font-bold text-[#D96B27]">Create Promotion Code</h3>
             <form onSubmit={handleCreateCoupon} className="space-y-3 text-xs">
               <div>
                 <label className="block text-[#77807B] mb-1">Coupon Code (e.g. FESTIVE20)</label>
@@ -1118,7 +1116,7 @@ export default function AdminDashboard() {
                   value={newCoupon.code}
                   onChange={(e) => setNewCoupon({ ...newCoupon, code: e.target.value })}
                   required
-                  className="w-full p-2.5 bg-[#0E1512] border border-[#203830] text-[#F8F5EE] uppercase focus:outline-none focus:border-[#C49A5A]"
+                  className="w-full p-2.5 bg-[#0E1512] border border-[#203830] text-[#F8F5EE] uppercase focus:outline-none focus:border-[#D96B27]"
                 />
               </div>
 
@@ -1152,7 +1150,7 @@ export default function AdminDashboard() {
                 >
                   Cancel
                 </button>
-                <button type="submit" className="px-6 py-2 bg-[#C49A5A] text-[#0A1A15] font-bold uppercase tracking-wider text-xs">
+                <button type="submit" className="px-6 py-2 bg-[#D96B27] text-white font-bold uppercase tracking-wider text-xs hover:bg-[#B85517] transition-all shadow-md shadow-[#D96B27]/20">
                   Create Code
                 </button>
               </div>

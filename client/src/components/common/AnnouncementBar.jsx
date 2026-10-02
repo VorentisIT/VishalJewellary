@@ -17,8 +17,8 @@ export default function AnnouncementBar() {
         <div className="animate-marquee whitespace-nowrap flex items-center gap-10 text-[10px] sm:text-[11px] tracking-widest uppercase font-medium">
           {[...announcements, ...announcements, ...announcements, ...announcements].map((text, idx) => (
             <span key={idx} className="flex items-center gap-3">
-              <span className="text-[#C49A5A]">✦</span>
-              <span className={text.includes('Shipping') ? 'text-[#C49A5A] font-semibold' : 'text-[#F8F5EE]/90'}>
+              <span className="text-[#E87D3E]">✦</span>
+              <span className={text.includes('Shipping') ? 'text-[#E87D3E] font-semibold' : 'text-[#F8F5EE]/90'}>
                 {text.replace(/^✦\s*/, '')}
               </span>
             </span>

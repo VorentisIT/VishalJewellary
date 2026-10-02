@@ -13,8 +13,8 @@ export default function NewsletterSection() {
   };
 
   return (
-    <section className="bg-ivory py-16 lg:py-20 border-b border-warm-border">
-      <div className="max-w-4xl mx-auto px-4 text-center space-y-6">
+    <section className="bg-ivory py-8 sm:py-10 border-b border-warm-border">
+      <div className="max-w-4xl mx-auto px-4 text-center space-y-4">
         <div>
           <h2 className="font-serif text-3xl sm:text-4xl text-charcoal font-normal mb-2">
             Be the First to Know
@@ -40,9 +40,9 @@ export default function NewsletterSection() {
             />
             <button
               type="submit"
-              className="bg-gold text-white text-xs font-bold uppercase tracking-widest px-8 py-3.5 hover:bg-gold-dark transition-colors flex-shrink-0"
+              className="bg-[#D96B27] text-white text-xs font-bold uppercase tracking-widest px-8 py-3.5 hover:bg-[#B85517] transition-all shadow-md shadow-[#D96B27]/25 flex-shrink-0"
             >
-              SUBSCRIBE →
+              SUBSCRIBE
             </button>
           </form>
         )}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { CheckCircle2, Clock, Truck, ShieldCheck, Gem, Package, Home, ArrowLeft } from 'lucide-react';
+import { CheckCircle2, Clock, Truck, ShieldCheck, Gem, Package, Home } from 'lucide-react';
 import AnnouncementBar from '../components/common/AnnouncementBar';
 import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
@@ -104,7 +104,7 @@ export default function OrderTracking() {
       <main className="flex-grow max-w-5xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10">
         
         <Link to="/account" className="inline-flex items-center gap-2 text-xs font-medium text-warm-gray hover:text-gold mb-6">
-          <ArrowLeft className="w-4 h-4" /> Back to Account Orders
+          Back to Account Orders
         </Link>
 
         {/* Order Header Info */}

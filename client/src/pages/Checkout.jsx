@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ShieldCheck, ArrowRight, CheckCircle2, Lock, CreditCard, Smartphone, Building, Truck } from 'lucide-react';
+import { ShieldCheck, CheckCircle2, Lock, CreditCard, Smartphone, Building, Truck } from 'lucide-react';
 import { useShop, formatINR } from '../store/ShopContext';
 
 export default function Checkout() {
@@ -188,7 +188,7 @@ export default function Checkout() {
                 to={`/order-tracking/${placedOrder?._id || 'AUR-984210'}`}
                 className="bg-charcoal text-ivory text-xs uppercase tracking-widest px-8 py-3.5 hover:bg-gold transition-colors"
               >
-                Track Live Progress →
+                Track Live Progress
               </Link>
             </div>
           </div>
@@ -295,9 +295,9 @@ export default function Checkout() {
                   <button
                     type="submit"
                     disabled={isProcessing}
-                    className="w-full bg-charcoal text-ivory text-xs font-semibold uppercase tracking-widest py-4 hover:bg-gold transition-colors flex items-center justify-center gap-2 mt-4 disabled:opacity-50 cursor-pointer"
+                    className="w-full bg-[#D96B27] text-white text-xs font-semibold uppercase tracking-widest py-4 hover:bg-[#B85517] transition-all flex items-center justify-center gap-2 mt-4 disabled:opacity-50 cursor-pointer shadow-lg shadow-[#D96B27]/25"
                   >
-                    {isProcessing ? 'Processing Order...' : 'Place Order & Send to Admin Panel →'}
+                    {isProcessing ? 'Processing Order...' : 'Place Order & Send to Admin Panel'}
                   </button>
                 </form>
               ) : (
@@ -306,7 +306,7 @@ export default function Checkout() {
                   <h3 className="font-serif text-xl font-bold text-charcoal">Select Payment Option</h3>
                   
                   <div className="space-y-3">
-                    <label className={`flex items-center gap-4 p-4 border cursor-pointer ${formData.paymentMethod === 'UPI' ? 'border-gold bg-gold-light' : 'border-warm-border'}`}>
+                    <label className={`flex items-center gap-4 p-4 border cursor-pointer ${formData.paymentMethod === 'UPI' ? 'border-[#D96B27] bg-[#D96B27]/10' : 'border-warm-border'}`}>
                       <input
                         type="radio"
                         name="paymentMethod"
@@ -314,7 +314,7 @@ export default function Checkout() {
                         checked={formData.paymentMethod === 'UPI'}
                         onChange={handleInputChange}
                       />
-                      <Smartphone className="w-5 h-5 text-gold" />
+                      <Smartphone className="w-5 h-5 text-[#D96B27]" />
                       <div>
                         <span className="text-xs font-bold text-charcoal block">Instant UPI Payment (GPay, PhonePe, Paytm)</span>
                         <span className="text-[10px] text-warm-gray">Zero transaction fee</span>
@@ -334,7 +334,7 @@ export default function Checkout() {
                       </div>
                     )}
 
-                    <label className={`flex items-center gap-4 p-4 border cursor-pointer ${formData.paymentMethod === 'Card' ? 'border-gold bg-gold-light' : 'border-warm-border'}`}>
+                    <label className={`flex items-center gap-4 p-4 border cursor-pointer ${formData.paymentMethod === 'Card' ? 'border-[#D96B27] bg-[#D96B27]/10' : 'border-warm-border'}`}>
                       <input
                         type="radio"
                         name="paymentMethod"
@@ -342,14 +342,14 @@ export default function Checkout() {
                         checked={formData.paymentMethod === 'Card'}
                         onChange={handleInputChange}
                       />
-                      <CreditCard className="w-5 h-5 text-gold" />
+                      <CreditCard className="w-5 h-5 text-[#D96B27]" />
                       <div>
                         <span className="text-xs font-bold text-charcoal block">Credit / Debit Card (Razorpay)</span>
                         <span className="text-[10px] text-warm-gray">Visa, Mastercard, Amex supported</span>
                       </div>
                     </label>
 
-                    <label className={`flex items-center gap-4 p-4 border cursor-pointer ${formData.paymentMethod === 'NetBanking' ? 'border-gold bg-gold-light' : 'border-warm-border'}`}>
+                    <label className={`flex items-center gap-4 p-4 border cursor-pointer ${formData.paymentMethod === 'NetBanking' ? 'border-[#D96B27] bg-[#D96B27]/10' : 'border-warm-border'}`}>
                       <input
                         type="radio"
                         name="paymentMethod"
@@ -357,7 +357,7 @@ export default function Checkout() {
                         checked={formData.paymentMethod === 'NetBanking'}
                         onChange={handleInputChange}
                       />
-                      <Building className="w-5 h-5 text-gold" />
+                      <Building className="w-5 h-5 text-[#D96B27]" />
                       <div>
                         <span className="text-xs font-bold text-charcoal block">Net Banking</span>
                         <span className="text-[10px] text-warm-gray">All major Indian banks</span>
@@ -369,14 +369,14 @@ export default function Checkout() {
                     <button
                       type="button"
                       onClick={() => setStep(1)}
-                      className="w-1/3 bg-transparent border border-warm-border text-charcoal text-xs uppercase tracking-widest py-4 hover:border-gold"
+                      className="w-1/3 bg-transparent border border-warm-border text-charcoal text-xs uppercase tracking-widest py-4 hover:border-[#D96B27]"
                     >
                       Back
                     </button>
                     <button
                       type="submit"
                       disabled={isProcessing}
-                      className="w-2/3 bg-charcoal text-ivory text-xs font-semibold uppercase tracking-widest py-4 hover:bg-gold transition-colors flex items-center justify-center gap-2 shadow-luxury"
+                      className="w-2/3 bg-[#D96B27] text-white text-xs font-semibold uppercase tracking-widest py-4 hover:bg-[#B85517] transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#D96B27]/25"
                     >
                       {isProcessing ? 'Encrypting & Placing Order...' : `Pay ${formatINR(cartTotal)} Now`}
                     </button>

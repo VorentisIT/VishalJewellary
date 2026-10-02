@@ -1,5 +1,5 @@
 import React from 'react';
-import { Instagram, ArrowUpRight } from 'lucide-react';
+import { Instagram } from 'lucide-react';
 
 const instaImages = [
   '/assets/category_necklaces.jpg',
@@ -13,10 +13,10 @@ const instaImages = [
 
 export default function InstagramSection() {
   return (
-    <section className="bg-[#102C24] text-[#F8F5EE] py-14 lg:py-18 border-b border-[#0A1D18]">
+    <section className="bg-[#102C24] text-[#F8F5EE] py-8 sm:py-10 border-b border-[#0A1D18]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        <div className="mb-6">
+        <div className="mb-4">
           <span className="text-[10px] font-bold tracking-[0.28em] text-[#C49A5A] uppercase block font-sans mb-1">
             FOLLOW THE STORY
           </span>
@@ -57,7 +57,7 @@ export default function InstagramSection() {
               rel="noreferrer"
               className="inline-flex items-center gap-1 bg-[#173D32] border border-[#C49A5A]/40 text-[#D9BC86] text-[10px] font-semibold uppercase tracking-wider px-3.5 py-1.5 rounded-full hover:bg-[#C49A5A] hover:text-white transition-colors"
             >
-              Tag us to be featured <ArrowUpRight className="w-3 h-3" />
+              Tag us to be featured
             </a>
           </div>
 

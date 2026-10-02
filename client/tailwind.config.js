@@ -27,6 +27,12 @@ export default {
           dark: '#A57E3F',
           hover: '#B38E46'
         },
+        saffron: {
+          DEFAULT: '#D96B27',
+          light: '#E87D3E',
+          dark: '#B85517',
+          soft: '#FFF5EB'
+        },
         charcoal: {
           DEFAULT: '#202522',
           muted: '#77736B'

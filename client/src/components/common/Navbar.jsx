@@ -52,25 +52,123 @@ export default function Navbar() {
               </Link>
 
               {isMegaMenuOpen && (
-                <div className="absolute top-full left-0 w-[520px] bg-[#F8F5EE] border border-[#DED8CC] shadow-2xl p-6 rounded-b-sm grid grid-cols-2 gap-6 z-50">
-                  <div>
-                    <h4 className="font-serif font-semibold text-[#202522] text-sm mb-3 border-b border-[#DED8CC] pb-1">Categories</h4>
-                    <ul className="space-y-2 text-xs normal-case text-[#77736B]">
-                      <li><Link to="/jewellery/rings" className="hover:text-[#C49A5A]">Rings & Solitaires</Link></li>
-                      <li><Link to="/jewellery/necklaces" className="hover:text-[#C49A5A]">Gold & Diamond Necklaces</Link></li>
-                      <li><Link to="/jewellery/earrings" className="hover:text-[#C49A5A]">Diamond Drop Earrings</Link></li>
-                      <li><Link to="/jewellery/bracelets" className="hover:text-[#C49A5A]">Tennis Bracelets & Bangles</Link></li>
+                <div className="absolute top-full -left-20 w-[780px] bg-[#FAF7F2] border border-[#DED8CC] shadow-2xl rounded-sm p-6 grid grid-cols-12 gap-6 z-50 animate-fadeIn select-none">
+                  
+                  {/* Col 1: Categories */}
+                  <div className="col-span-4 space-y-3">
+                    <div className="flex items-center justify-between border-b border-[#DED8CC] pb-2">
+                      <h4 className="font-serif text-[11px] font-bold tracking-[0.2em] text-[#C49A5A] uppercase">
+                        CATEGORIES
+                      </h4>
+                    </div>
+                    <ul className="space-y-2 text-xs normal-case text-[#202522]">
+                      <li>
+                        <Link to="/jewellery/rings" className="group flex items-center justify-between hover:text-[#D96B27] transition-colors py-1">
+                          <span className="group-hover:translate-x-1 transition-transform font-medium">Rings & Solitaires</span>
+                          <span className="text-[9px] font-sans font-semibold text-[#D96B27] bg-[#D96B27]/15 px-1.5 py-0.5 rounded">Popular</span>
+                        </Link>
+                      </li>
+                      <li>
+                        <Link to="/jewellery/necklaces" className="group flex items-center justify-between hover:text-[#D96B27] transition-colors py-1">
+                          <span className="group-hover:translate-x-1 transition-transform font-medium">Gold & Diamond Necklaces</span>
+                        </Link>
+                      </li>
+                      <li>
+                        <Link to="/jewellery/earrings" className="group flex items-center justify-between hover:text-[#D96B27] transition-colors py-1">
+                          <span className="group-hover:translate-x-1 transition-transform font-medium">Diamond Drop Earrings</span>
+                        </Link>
+                      </li>
+                      <li>
+                        <Link to="/jewellery/bracelets" className="group flex items-center justify-between hover:text-[#D96B27] transition-colors py-1">
+                          <span className="group-hover:translate-x-1 transition-transform font-medium">Tennis Bracelets & Bangles</span>
+                        </Link>
+                      </li>
+                      <li>
+                        <Link to="/jewellery?category=Men's" className="group flex items-center justify-between hover:text-[#D96B27] transition-colors py-1">
+                          <span className="group-hover:translate-x-1 transition-transform font-medium">Men's Fine Jewellery</span>
+                        </Link>
+                      </li>
                     </ul>
                   </div>
 
-                  <div>
-                    <h4 className="font-serif font-semibold text-[#202522] text-sm mb-3 border-b border-[#DED8CC] pb-1">Curated Collections</h4>
-                    <ul className="space-y-2 text-xs normal-case text-[#77736B]">
-                      <li><Link to="/jewellery?collection=The Bridal Edit" className="hover:text-[#C49A5A]">The Bridal Edit</Link></li>
-                      <li><Link to="/jewellery?collection=Everyday Gold" className="hover:text-[#C49A5A]">Everyday Gold</Link></li>
-                      <li><Link to="/jewellery?collection=Diamond Essentials" className="hover:text-[#C49A5A]">Diamond Essentials</Link></li>
+                  {/* Col 2: Curated Collections */}
+                  <div className="col-span-4 space-y-3">
+                    <div className="flex items-center justify-between border-b border-[#DED8CC] pb-2">
+                      <h4 className="font-serif text-[11px] font-bold tracking-[0.2em] text-[#C49A5A] uppercase">
+                        COLLECTIONS
+                      </h4>
+                    </div>
+                    <ul className="space-y-2 text-xs normal-case text-[#202522]">
+                      <li>
+                        <Link to="/jewellery?collection=The Bridal Edit" className="group flex items-center justify-between hover:text-[#D96B27] transition-colors py-1">
+                          <span className="group-hover:translate-x-1 transition-transform font-medium">The Bridal Edit</span>
+                          <span className="text-[9px] font-sans font-bold text-white bg-[#D96B27] px-1.5 py-0.5 uppercase tracking-wider">New</span>
+                        </Link>
+                      </li>
+                      <li>
+                        <Link to="/jewellery?collection=Everyday Gold" className="group flex items-center justify-between hover:text-[#D96B27] transition-colors py-1">
+                          <span className="group-hover:translate-x-1 transition-transform font-medium">Everyday Modern Gold</span>
+                        </Link>
+                      </li>
+                      <li>
+                        <Link to="/jewellery?collection=Diamond Essentials" className="group flex items-center justify-between hover:text-[#D96B27] transition-colors py-1">
+                          <span className="group-hover:translate-x-1 transition-transform font-medium">Diamond Essentials</span>
+                        </Link>
+                      </li>
+                      <li>
+                        <Link to="/jewellery?newArrival=true" className="group flex items-center justify-between hover:text-[#D96B27] transition-colors py-1">
+                          <span className="group-hover:translate-x-1 transition-transform font-medium">Latest 2026 Arrivals</span>
+                        </Link>
+                      </li>
+                      <li>
+                        <Link to="/jewellery" className="group flex items-center justify-between text-[#D96B27] font-semibold transition-colors py-1">
+                          <span className="group-hover:translate-x-1 transition-transform">Browse All Jewellery</span>
+                        </Link>
+                      </li>
                     </ul>
                   </div>
+
+                  {/* Col 3: Featured Spotlight Card */}
+                  <div className="col-span-4 bg-[#F0EAE1] border border-[#DED8CC] p-3 rounded-sm flex flex-col justify-between relative overflow-hidden group">
+                    <div className="aspect-[16/10] overflow-hidden rounded-sm relative mb-2">
+                      <img
+                        src="/assets/editorial_bridal.jpg"
+                        alt="Featured Bridal Collection"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 pointer-events-none"
+                      />
+                      <span className="absolute top-2 left-2 bg-[#D96B27] text-white text-[8px] font-bold uppercase tracking-widest px-2 py-0.5 shadow-sm">
+                        FEATURED EDIT
+                      </span>
+                    </div>
+                    <div>
+                      <h5 className="font-serif text-sm font-semibold text-[#202522]">
+                        The Royal Bridal Suite
+                      </h5>
+                      <p className="text-[10px] text-[#77736B] leading-relaxed mt-0.5">
+                        Certified diamonds crafted for unforgettable moments.
+                      </p>
+                      <Link
+                        to="/jewellery?category=Bridal"
+                        className="inline-block text-[10px] font-semibold text-[#D96B27] uppercase tracking-wider mt-2 border-b border-[#D96B27] pb-0.5 hover:text-[#B85517]"
+                      >
+                        EXPLORE BRIDAL
+                      </Link>
+                    </div>
+                  </div>
+
+                  {/* Bottom Hallmarks Strip */}
+                  <div className="col-span-12 pt-3 border-t border-[#DED8CC] flex items-center justify-between text-[10px] text-[#77736B] uppercase tracking-wider">
+                    <span className="flex items-center gap-1 font-medium">
+                      <span className="text-[#C49A5A]">✦</span> 100% BIS Hallmarked
+                    </span>
+                    <span className="flex items-center gap-1 font-medium">
+                      <span className="text-[#C49A5A]">✦</span> IGI / GIA Certified
+                    </span>
+                    <span className="flex items-center gap-1 font-medium">
+                      <span className="text-[#C49A5A]">✦</span> Insured Express Delivery
+                    </span>
+                  </div>
+
                 </div>
               )}
             </div>
@@ -101,12 +199,12 @@ export default function Navbar() {
 
             <Link
               to="/wishlist"
-              className="hidden sm:block relative p-1 hover:text-[#C49A5A] transition-colors"
+              className="hidden sm:block relative p-1 hover:text-[#D96B27] transition-colors"
               aria-label="Wishlist"
             >
               <Heart className="w-5 h-5 stroke-[1.3]" />
               {wishlist.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-[#C49A5A] text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 bg-[#D96B27] text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-sm">
                   {wishlist.length}
                 </span>
               )}
@@ -114,7 +212,7 @@ export default function Navbar() {
 
             <Link
               to={user ? (user.role === 'admin' ? '/admin' : '/account') : '/account'}
-              className="p-1 hover:text-[#C49A5A] transition-colors"
+              className="p-1 hover:text-[#D96B27] transition-colors"
               aria-label="Account"
             >
               <User className="w-5 h-5 stroke-[1.3]" />
@@ -122,12 +220,12 @@ export default function Navbar() {
 
             <button
               onClick={() => setIsCartOpen(true)}
-              className="relative p-1 hover:text-[#C49A5A] transition-colors flex items-center"
+              className="relative p-1 hover:text-[#D96B27] transition-colors flex items-center"
               aria-label="Shopping Cart"
             >
               <ShoppingBag className="w-5 h-5 stroke-[1.3]" />
               {totalCartCount > 0 && (
-                <span className="bg-[#102C24] text-[#F8F5EE] text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                <span className="bg-[#D96B27] text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-sm">
                   {totalCartCount}
                 </span>
               )}

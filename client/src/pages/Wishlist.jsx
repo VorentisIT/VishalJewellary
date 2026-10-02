@@ -30,7 +30,7 @@ export default function Wishlist() {
             <p className="font-serif text-xl text-charcoal">Your wishlist is currently empty.</p>
             <Link
               to="/jewellery"
-              className="inline-block bg-charcoal text-ivory text-xs uppercase tracking-widest px-6 py-3 hover:bg-gold transition-colors"
+              className="inline-block bg-[#D96B27] text-white text-xs uppercase tracking-widest px-6 py-3 hover:bg-[#B85517] transition-all shadow-md shadow-[#D96B27]/20"
             >
               Explore Fine Jewellery
             </Link>
@@ -48,7 +48,7 @@ export default function Wishlist() {
                   <div className="flex gap-2 pt-2">
                     <button
                       onClick={() => addToCart(product, 1)}
-                      className="flex-1 bg-charcoal text-ivory text-xs uppercase tracking-widest py-2.5 hover:bg-gold transition-colors flex items-center justify-center gap-1"
+                      className="flex-1 bg-[#D96B27] text-white text-xs uppercase tracking-widest py-2.5 hover:bg-[#B85517] transition-all flex items-center justify-center gap-1 shadow-sm"
                     >
                       <ShoppingBag className="w-3.5 h-3.5" /> Move to Bag
                     </button>

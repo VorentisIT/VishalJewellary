@@ -85,3 +85,26 @@
   animation-play-state: paused;
 }
 
+.animate-slide-continuous {
+  display: flex;
+  width: max-content;
+  animation: marqueeScroll 25s linear infinite;
+}
+
+.animate-slide-continuous:hover,
+.animate-slide-continuous:active {
+  animation-play-state: paused;
+}
+
+.animate-slide-products {
+  display: flex;
+  width: max-content;
+  animation: marqueeScroll 28s linear infinite;
+}
+
+.animate-slide-products:hover,
+.animate-slide-products:active {
+  animation-play-state: paused;
+}
+
+
