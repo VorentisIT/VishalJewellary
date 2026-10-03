@@ -26,7 +26,7 @@ export default function CollectionEditorial() {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => alert("Playing Aurélia Bridal Story video...")}
+              onClick={() => alert("Playing Vishal Jewellery Bridal Story video...")}
               className="absolute bottom-6 left-6 z-10 bg-black/50 backdrop-blur-md border border-white/30 text-white text-[10px] font-semibold uppercase tracking-widest px-4 py-2 rounded-full flex items-center gap-2 hover:bg-black/70 transition-colors"
             >
               <Play className="w-3 h-3 fill-white text-white" /> WATCH OUR STORY

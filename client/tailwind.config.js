@@ -42,8 +42,9 @@ export default {
         }
       },
       fontFamily: {
-        serif: ['Cormorant Garamond', 'Playfair Display', 'Georgia', 'serif'],
-        sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif']
+        serif: ['Playfair Display', 'Cormorant Garamond', 'Cinzel', 'Georgia', 'serif'],
+        sans: ['Outfit', 'Plus Jakarta Sans', 'Inter', 'sans-serif'],
+        display: ['Cinzel', 'Playfair Display', 'serif']
       }
     },
   },

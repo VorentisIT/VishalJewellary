@@ -27,13 +27,12 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-20">
           
           {/* Logo */}
-          <Link to="/" className="inline-block flex-shrink-0">
-            <span className="font-serif text-2xl sm:text-3xl font-bold tracking-[0.2em] text-[#202522] uppercase block">
-              AURÉLIA
-            </span>
-            <span className="text-[8px] font-semibold tracking-[0.35em] text-[#C49A5A] uppercase block -mt-1">
-              FINE JEWELLERY
-            </span>
+          <Link to="/" className="inline-flex items-center flex-shrink-0">
+            <img 
+              src="/assets/vishal_jewellery_logo.png" 
+              alt="Vishal Jewellery Logo" 
+              className="h-11 sm:h-12 w-auto object-contain" 
+            />
           </Link>
 
           {/* Desktop Navigation Links Centered */}
@@ -271,14 +270,9 @@ export default function Navbar() {
           <div className="bg-[#F8F5EE] w-4/5 max-w-xs h-full shadow-2xl p-6 flex flex-col justify-between overflow-y-auto">
             <div>
               <div className="flex justify-between items-center pb-4 border-b border-[#DED8CC] mb-6">
-                <div>
-                  <span className="font-serif text-xl font-bold tracking-[0.2em] text-[#202522] uppercase block">
-                    AURÉLIA
-                  </span>
-                  <span className="text-[8px] font-semibold tracking-[0.35em] text-[#C49A5A] uppercase block -mt-1">
-                    FINE JEWELLERY
-                  </span>
-                </div>
+                <Link to="/" onClick={() => setIsMobileMenuOpen(false)}>
+                  <img src="/assets/vishal_jewellery_logo.png" alt="Vishal Jewellery" className="h-10 w-auto object-contain" />
+                </Link>
                 <button
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="p-1 text-[#202522] hover:text-[#C49A5A]"
@@ -349,7 +343,7 @@ export default function Navbar() {
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="block py-2 border-b border-[#DED8CC]/60 hover:text-[#C49A5A]"
                 >
-                  ABOUT AURÉLIA
+                  ABOUT VISHAL JEWELLERY
                 </Link>
               </nav>
             </div>

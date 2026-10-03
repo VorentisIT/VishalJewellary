@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="100%" height="100%">
+  <defs>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#D96B27" />
+      <stop offset="50%" stop-color="#E87D3E" />
+      <stop offset="100%" stop-color="#B85517" />
+    </linearGradient>
+    <linearGradient id="diamondGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="50%" stop-color="#F3E5D8" />
+      <stop offset="100%" stop-color="#D96B27" />
+    </linearGradient>
+  </defs>
+  <!-- Outer Gold Diamond Frame -->
+  <rect x="15" y="15" width="90" height="90" rx="4" transform="rotate(45 60 60)" fill="none" stroke="url(#goldGrad)" stroke-width="2.5" />
+  <rect x="22" y="22" width="76" height="76" rx="2" transform="rotate(45 60 60)" fill="none" stroke="#D96B27" stroke-opacity="0.3" stroke-width="1" />
+  
+  <!-- Stylized Luxury 'V' Monogram -->
+  <path d="M 38 40 L 52 40 L 60 76 L 68 40 L 82 40 L 68 85 C 65 91 55 91 52 85 Z" fill="url(#goldGrad)" />
+  
+  <!-- Faceted Solitaire Diamond Sparkle on Top Right of V -->
+  <polygon points="76,32 84,24 92,32 84,40" fill="url(#diamondGrad)" stroke="#D96B27" stroke-width="0.8" />
+  <line x1="84" y1="24" x2="84" y2="40" stroke="#FFFFFF" stroke-width="0.8" />
+  <line x1="76" y1="32" x2="92" y2="32" stroke="#FFFFFF" stroke-width="0.8" />
+</svg>

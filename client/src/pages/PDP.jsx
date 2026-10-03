@@ -6,6 +6,7 @@ import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
 import CartDrawer from '../components/cart/CartDrawer';
 import { useShop, formatINR } from '../store/ShopContext';
+import { catalogueProducts } from '../data/catalogueData';
 import { seedProducts } from '../../../server/seed/seedData.js';
 
 export default function PDP() {
@@ -21,23 +22,43 @@ export default function PDP() {
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
 
   useEffect(() => {
+    const localProds = JSON.parse(localStorage.getItem('aurelia_local_products') || '[]');
+    const allProducts = [
+      ...catalogueProducts,
+      ...localProds,
+      ...seedProducts.map((p, i) => ({ ...p, _id: `mem_prod_${i + 1}` }))
+    ];
+
+    const findMatch = (id) => {
+      if (!id) return allProducts[0];
+      const normalized = decodeURIComponent(id).toLowerCase().trim();
+      return allProducts.find((p) => 
+        (p.slug && p.slug.toLowerCase() === normalized) ||
+        (p.sku && p.sku.toLowerCase() === normalized) ||
+        (p._id && String(p._id).toLowerCase() === normalized) ||
+        (p.name && p.name.toLowerCase().replace(/[^a-z0-9]/g, '-') === normalized)
+      ) || allProducts.find(p => p.name && p.name.toLowerCase().includes(normalized)) || allProducts[0];
+    };
+
     fetch(`/api/products/${identifier}`)
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error('API not available');
+        return res.json();
+      })
       .then((data) => {
         if (data && data.name) {
           setProduct(data);
           setSelectedImage(data.images && data.images[0] ? data.images[0] : '/assets/category_rings.jpg');
         } else {
-          // Fallback
-          const match = seedProducts.find((p) => p.slug === identifier || p.sku === identifier) || seedProducts[0];
-          setProduct({ ...match, _id: 'mem_prod_1' });
-          setSelectedImage(match.images[0]);
+          const match = findMatch(identifier);
+          setProduct(match);
+          setSelectedImage(match.images && match.images[0] ? match.images[0] : '/assets/category_rings.jpg');
         }
       })
       .catch(() => {
-        const match = seedProducts.find((p) => p.slug === identifier) || seedProducts[0];
-        setProduct({ ...match, _id: 'mem_prod_1' });
-        setSelectedImage(match.images[0]);
+        const match = findMatch(identifier);
+        setProduct(match);
+        setSelectedImage(match.images && match.images[0] ? match.images[0] : '/assets/category_rings.jpg');
       });
   }, [identifier]);
 
@@ -63,7 +84,7 @@ export default function PDP() {
         <nav className="text-xs text-warm-gray mb-8 space-x-2">
           <Link to="/" className="hover:text-gold">Home</Link>
           <span>/</span>
-          <Link to={`/jewellery/${product.category.toLowerCase()}`} className="hover:text-gold">{product.category}</Link>
+          <Link to={`/jewellery?category=${encodeURIComponent(product.category || 'All')}`} className="hover:text-gold">{product.category}</Link>
           <span>/</span>
           <span className="text-charcoal font-medium">{product.name}</span>
         </nav>

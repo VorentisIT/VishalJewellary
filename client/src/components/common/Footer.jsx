@@ -13,12 +13,11 @@ export default function Footer() {
           {/* Brand Column (2 cols) */}
           <div className="lg:col-span-2 space-y-4 pr-4">
             <Link to="/" className="inline-block">
-              <span className="font-serif text-2xl font-bold tracking-[0.25em] text-[#F8F5EE] uppercase block">
-                AURÉLIA
-              </span>
-              <span className="text-[8px] font-semibold tracking-[0.35em] text-[#C49A5A] uppercase block -mt-1">
-                FINE JEWELLERY
-              </span>
+              <img 
+                src="/assets/vishal_jewellery_logo.png" 
+                alt="Vishal Jewellery Logo" 
+                className="h-16 w-auto object-contain" 
+              />
             </Link>
             
             <p className="text-xs text-[#F8F5EE]/70 leading-relaxed max-w-sm font-light">
@@ -77,7 +76,7 @@ export default function Footer() {
 
         {/* Bottom Bar */}
         <div className="pt-8 flex flex-col md:flex-row justify-between items-center text-[11px] text-[#F8F5EE]/60 gap-4">
-          <p>© 2026 Aurélia Fine Jewellery. All rights reserved.</p>
+          <p>© 2026 Vishal Jewellery. All rights reserved.</p>
           
           <div className="flex space-x-6">
             <a href="#privacy" className="hover:text-[#C49A5A]">Privacy Policy</a>

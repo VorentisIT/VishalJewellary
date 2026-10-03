@@ -145,14 +145,9 @@ export default function Checkout() {
     <div className="min-h-screen bg-ivory text-charcoal font-sans">
       
       {/* Checkout Navbar */}
-      <header className="bg-white border-b border-warm-border py-4 px-6 text-center">
+      <header className="bg-white border-b border-warm-border py-3 px-6 text-center">
         <Link to="/" className="inline-block">
-          <span className="font-serif text-2xl font-bold tracking-[0.25em] text-charcoal uppercase block">
-            AURÉLIA
-          </span>
-          <span className="text-[8px] font-medium tracking-[0.35em] text-gold uppercase block -mt-1">
-            SECURE CHECKOUT
-          </span>
+          <img src="/assets/vishal_jewellery_logo.png" alt="Vishal Jewellery" className="h-10 w-auto object-contain" />
         </Link>
       </header>
 

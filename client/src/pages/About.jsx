@@ -21,7 +21,7 @@ export default function About() {
               Crafted With Intention. Worn With Meaning.
             </h1>
             <p className="text-sm text-charcoal-muted leading-relaxed font-light">
-              Founded on principles of uncompromised craftsmanship, AURÉLIA Fine Jewellery reimagines Indian luxury jewellery for the modern connoisseur.
+              Founded on principles of uncompromised craftsmanship, VISHAL Fine Jewellery reimagines luxury fine jewellery for the modern connoisseur.
             </p>
           </div>
         </section>

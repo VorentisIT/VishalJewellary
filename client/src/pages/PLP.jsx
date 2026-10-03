@@ -20,7 +20,10 @@ export default function PLP() {
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
 
   // Present Filter States
-  const activeCategory = categoryParam ? categoryParam.charAt(0).toUpperCase() + categoryParam.slice(1) : searchParams.get('category') || '';
+  const queryCategory = searchParams.get('category');
+  const collectionParam = searchParams.get('collection');
+  const currentCategory = categoryParam || queryCategory;
+  const activeCategory = currentCategory ? currentCategory.charAt(0).toUpperCase() + currentCategory.slice(1) : '';
   const selectedMetal = searchParams.get('metal') || '';
   const selectedStone = searchParams.get('stone') || '';
   const sortOption = searchParams.get('sort') || 'newest';
@@ -28,7 +31,7 @@ export default function PLP() {
   const minPrice = searchParams.get('minPrice') || '';
   const maxPrice = searchParams.get('maxPrice') || '';
 
-  const categories = ['Rings', 'Necklaces', 'Earrings', 'Bracelets', 'Solitaires'];
+  const categories = ['Bridal', 'Rings', 'Necklaces', 'Earrings', 'Bracelets', 'Solitaires', "Men's"];
   const metals = ['18K Gold', '22K Gold', 'Rose Gold', 'White Gold', 'Platinum'];
   const stones = ['Solitaire Diamond', 'Natural Diamond', 'Polki', 'Emerald', 'Sapphire'];
 
@@ -59,12 +62,31 @@ export default function PLP() {
       .catch(() => {
         filterAndSet(uniqueBase);
       });
-  }, [activeCategory, selectedMetal, selectedStone, searchQuery, minPrice, maxPrice, sortOption]);
+  }, [activeCategory, collectionParam, selectedMetal, selectedStone, searchQuery, minPrice, maxPrice, sortOption]);
 
   const filterAndSet = (items) => {
     let filtered = [...items];
     if (activeCategory) {
-      filtered = filtered.filter(p => p.category && p.category.toLowerCase() === activeCategory.toLowerCase());
+      const catNorm = activeCategory.toLowerCase().replace(/[^a-z]/g, '');
+      filtered = filtered.filter(p => {
+        if (!p.category) return false;
+        const pNorm = p.category.toLowerCase().replace(/[^a-z]/g, '');
+        return pNorm === catNorm || p.category.toLowerCase() === activeCategory.toLowerCase();
+      });
+    }
+    if (collectionParam) {
+      if (collectionParam.toLowerCase().includes('bridal')) {
+        filtered = filtered.filter(p => 
+          (p.category && p.category.toLowerCase() === 'bridal') ||
+          p.name.toLowerCase().includes('bridal') ||
+          p.description?.toLowerCase().includes('bridal')
+        );
+      } else {
+        filtered = filtered.filter(p => 
+          p.collection?.toLowerCase() === collectionParam.toLowerCase() ||
+          p.name.toLowerCase().includes(collectionParam.toLowerCase())
+        );
+      }
     }
     if (selectedMetal) {
       filtered = filtered.filter(p => p.metal && (p.metal === selectedMetal || p.metal.includes(selectedMetal)));
@@ -122,12 +144,12 @@ export default function PLP() {
           <nav className="text-xs text-warm-gray mb-2 space-x-2">
             <Link to="/" className="hover:text-[#D96B27] transition-colors">Home</Link>
             <span>/</span>
-            <span className="text-charcoal font-medium">{activeCategory || 'All Jewellery'}</span>
+            <span className="text-charcoal font-medium">{collectionParam || activeCategory || 'All Jewellery'}</span>
           </nav>
 
           <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2">
             <h1 className="font-serif text-3xl sm:text-4xl text-charcoal font-normal">
-              {activeCategory ? `${activeCategory} Collection` : 'Fine Jewellery Catalogue'}
+              {collectionParam ? collectionParam : activeCategory ? `${activeCategory} Collection` : 'Fine Jewellery Catalogue'}
             </h1>
             <p className="text-xs text-charcoal-muted">
               Showing {products.length} certified pieces

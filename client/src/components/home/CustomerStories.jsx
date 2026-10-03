@@ -44,7 +44,7 @@ export default function CustomerStories() {
           >
             <Quote className="w-8 h-8 text-[#D96B27]/40 stroke-[1]" />
             <p className="font-serif text-lg text-charcoal italic leading-relaxed">
-              "Every detail felt thoughtful, from the packaging to the piece itself. Aurélia has become my go-to for meaningful jewellery."
+              "Every detail felt thoughtful, from the packaging to the piece itself. Vishal Jewellery has become my go-to for meaningful jewellery."
             </p>
             
             <div className="pt-2 border-t border-warm-border flex justify-between items-center text-xs">

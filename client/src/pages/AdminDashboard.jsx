@@ -47,7 +47,7 @@ export default function AdminDashboard() {
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
   const [coupons, setCoupons] = useState([
-    { _id: 'c1', code: 'AURELIA10', discountPercentage: 10, minOrder: 0, usageCount: 84, active: true },
+    { _id: 'c1', code: 'VISHAL10', discountPercentage: 10, minOrder: 0, usageCount: 84, active: true },
     { _id: 'c2', code: 'BRIDAL15', discountPercentage: 15, minOrder: 100000, usageCount: 29, active: true }
   ]);
 
@@ -280,13 +280,11 @@ export default function AdminDashboard() {
         
         <div className="flex items-center gap-4">
           <Link to="/" className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-[#102C24] border border-[#C49A5A] rounded flex items-center justify-center font-serif text-lg font-bold text-[#C49A5A]">
-              A
-            </div>
+            <img src="/assets/vishal_jewellery_logo.png" alt="Vishal Jewellery" className="h-10 w-auto object-contain" />
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-serif text-lg font-bold tracking-[0.2em] text-[#F8F5EE] uppercase">
-                  AURÉLIA
+                <span className="font-serif text-lg font-bold tracking-[0.16em] text-[#F8F5EE] uppercase">
+                  VISHAL JEWELLERY
                 </span>
                 <span className="bg-[#C49A5A]/20 border border-[#C49A5A]/40 text-[#D9BC86] text-[9px] font-semibold tracking-widest px-2 py-0.5 rounded uppercase">
                   ENTERPRISE SUITE
@@ -329,7 +327,7 @@ export default function AdminDashboard() {
           <div className="flex items-center gap-2">
             <div className="text-right">
               <span className="block font-semibold text-[#F8F5EE] text-xs leading-none">
-                {user?.name || 'AURÉLIA Admin'}
+                {user?.name || 'VISHAL Admin'}
               </span>
               <span className="text-[10px] text-[#C49A5A] uppercase tracking-wider font-mono">
                 {user?.role || 'Administrator'}

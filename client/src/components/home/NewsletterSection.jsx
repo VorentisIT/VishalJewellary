@@ -26,7 +26,7 @@ export default function NewsletterSection() {
 
         {subscribed ? (
           <p className="text-xs font-semibold text-emerald-800 bg-emerald-100 p-3 max-w-md mx-auto border border-emerald-200">
-            Thank you for subscribing to AURÉLIA Fine Jewellery.
+            Thank you for subscribing to VISHAL Fine Jewellery.
           </p>
         ) : (
           <form onSubmit={handleSubmit} className="max-w-md mx-auto flex flex-col sm:flex-row gap-3">

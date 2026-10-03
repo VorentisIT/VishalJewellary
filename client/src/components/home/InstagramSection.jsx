@@ -21,7 +21,7 @@ export default function InstagramSection() {
             FOLLOW THE STORY
           </span>
           <h2 className="font-serif text-2xl sm:text-3xl text-white font-normal">
-            @aureliajewellery
+            @vishaljewellery
           </h2>
         </div>
 

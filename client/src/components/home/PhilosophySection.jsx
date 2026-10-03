@@ -19,7 +19,7 @@ export default function PhilosophySection() {
           Designed for the moments that deserve to be remembered.
         </h2>
         <p className="text-xs sm:text-sm text-charcoal-muted max-w-xl mx-auto leading-relaxed font-light">
-          At AURÉLIA, we create more than fine jewellery. We craft timeless heirlooms that celebrate love, strength, and every chapter of your unique story.
+          At VISHAL JEWELLERY, we create more than fine jewellery. We craft timeless heirlooms that celebrate love, strength, and every chapter of your unique story.
         </p>
         <div className="pt-2">
           <Link

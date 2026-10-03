@@ -51,7 +51,7 @@ export default function CartDrawer() {
   const remainingForFreeShipping = Math.max(0, freeShippingThreshold - cartSubtotal);
 
   const availableCoupons = [
-    { code: 'AURELIA10', label: '10% OFF', desc: 'On all fine jewellery orders', min: 0, pct: 10 },
+    { code: 'VISHAL10', label: '10% OFF', desc: 'On all fine jewellery orders', min: 0, pct: 10 },
     { code: 'BRIDAL15', label: '15% OFF', desc: 'Orders above ₹1,00,000', min: 100000, pct: 15 },
     { code: 'GOLDEN5', label: '5% INSTANT', desc: 'Extra discount on gold pieces', min: 0, pct: 5 }
   ];
@@ -61,10 +61,10 @@ export default function CartDrawer() {
     setCouponSuccess('');
     const codeClean = code.trim().toUpperCase();
 
-    if (codeClean === 'AURELIA10') {
-      setAppliedCoupon({ code: 'AURELIA10', discountPercentage: 10 });
+    if (codeClean === 'VISHAL10' || codeClean === 'AURELIA10') {
+      setAppliedCoupon({ code: 'VISHAL10', discountPercentage: 10 });
       setCouponSuccess('10% Luxury discount applied!');
-      setCouponCode('AURELIA10');
+      setCouponCode('VISHAL10');
     } else if (codeClean === 'BRIDAL15') {
       if (cartSubtotal >= 100000) {
         setAppliedCoupon({ code: 'BRIDAL15', discountPercentage: 15 });

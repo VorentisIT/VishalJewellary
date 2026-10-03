@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, ShoppingBag, Eye, Star } from 'lucide-react';
 import { useShop, formatINR } from '../../store/ShopContext';
+import { catalogueProducts } from '../../data/catalogueData';
 import { seedProducts } from '../../../../server/seed/seedData.js';
 
 export default function NewArrivals() {
@@ -9,17 +10,21 @@ export default function NewArrivals() {
   const [products, setProducts] = useState([]);
 
   useEffect(() => {
+    const fallbackList = catalogueProducts.slice(0, 8);
     fetch('/api/products?newArrival=true')
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error('API not available');
+        return res.json();
+      })
       .then((data) => {
         if (Array.isArray(data) && data.length > 0) {
-          setProducts(data.slice(0, 4));
+          setProducts(data);
         } else {
-          setProducts(seedProducts.slice(0, 4).map((p, i) => ({ ...p, _id: `mem_prod_${i + 1}` })));
+          setProducts(fallbackList);
         }
       })
       .catch(() => {
-        setProducts(seedProducts.slice(0, 4).map((p, i) => ({ ...p, _id: `mem_prod_${i + 1}` })));
+        setProducts(fallbackList);
       });
   }, []);
 
