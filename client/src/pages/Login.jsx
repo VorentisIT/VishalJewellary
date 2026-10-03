@@ -6,6 +6,7 @@ import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
 import CartDrawer from '../components/cart/CartDrawer';
 import { useShop, createJwtToken, parseJwt } from '../store/ShopContext';
+import { registerUser, verifyUserCredentials } from '../utils/authDb';
 
 export default function Login() {
   const { login, sessionExpiredMsg, setSessionExpiredMsg } = useShop();
@@ -19,71 +20,6 @@ export default function Login() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleDemoAuth = (cleanEmail, pass, userName) => {
-    const sessionDurationSeconds = 24 * 3600; // 24 hours JWT session
-    const expiresAt = Date.now() + (sessionDurationSeconds * 1000);
-
-    if (cleanEmail === 'admin@gmail.com' && pass === 'admin123') {
-      const payload = {
-        userId: 'admin_001',
-        name: 'Vishal Jewellery Admin',
-        email: 'admin@gmail.com',
-        role: 'admin'
-      };
-      const token = createJwtToken(payload, sessionDurationSeconds);
-      const mockAdmin = {
-        ...payload,
-        token,
-        expiresAt
-      };
-      if (setSessionExpiredMsg) setSessionExpiredMsg('');
-      login(mockAdmin);
-      navigate('/admin');
-      return true;
-    }
-
-    if (isRegisterMode) {
-      const payload = {
-        userId: 'cust_' + Date.now(),
-        name: userName || 'Valued Collector',
-        email: cleanEmail,
-        role: 'customer'
-      };
-      const token = createJwtToken(payload, sessionDurationSeconds);
-      const newCustomer = {
-        ...payload,
-        token,
-        expiresAt
-      };
-      if (setSessionExpiredMsg) setSessionExpiredMsg('');
-      login(newCustomer);
-      navigate('/account');
-      return true;
-    }
-
-    if (cleanEmail && pass) {
-      const isAd = cleanEmail.includes('admin');
-      const payload = {
-        userId: isAd ? 'admin_001' : 'cust_' + Date.now(),
-        name: userName || (isAd ? 'Vishal Jewellery Director' : cleanEmail.split('@')[0]),
-        email: cleanEmail,
-        role: isAd ? 'admin' : 'customer'
-      };
-      const token = createJwtToken(payload, sessionDurationSeconds);
-      const demoUser = {
-        ...payload,
-        token,
-        expiresAt
-      };
-      if (setSessionExpiredMsg) setSessionExpiredMsg('');
-      login(demoUser);
-      navigate(isAd ? '/admin' : '/account');
-      return true;
-    }
-
-    return false;
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -91,50 +27,122 @@ export default function Login() {
 
     const cleanEmail = email.trim().toLowerCase();
     const cleanPass = password.trim();
-    const endpoint = isRegisterMode ? '/api/auth/register' : '/api/auth/login';
-    const payload = isRegisterMode ? { name, email: cleanEmail, password: cleanPass } : { email: cleanEmail, password: cleanPass };
+    const sessionDurationSeconds = 24 * 3600; // 24 hours
+
+    if (!cleanEmail || !cleanPass) {
+      setError('Please provide both email and password.');
+      setIsLoading(false);
+      return;
+    }
+
+    if (cleanPass.length < 4) {
+      setError('Password must be at least 4 characters long.');
+      setIsLoading(false);
+      return;
+    }
 
     try {
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
+      const endpoint = isRegisterMode ? '/api/auth/register' : '/api/auth/login';
+      const payload = isRegisterMode
+        ? { name: name ? name.trim() : cleanEmail.split('@')[0], email: cleanEmail, password: cleanPass }
+        : { email: cleanEmail, password: cleanPass };
 
-      const contentType = res.headers.get('content-type') || '';
-      if (!contentType.includes('application/json')) {
-        // Static server returned 404 HTML, handle via demo fallback
-        setIsLoading(false);
-        const success = handleDemoAuth(cleanEmail, cleanPass, name);
-        if (!success) {
-          setError('Invalid credentials. Please check your email and password.');
+      // 1. First attempt to call the Node.js / Express Server API
+      let serverAuthSuccess = false;
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const contentType = res.headers.get('content-type') || '';
+        if (contentType.includes('application/json')) {
+          const data = await res.json();
+          if (res.ok && data.token) {
+            serverAuthSuccess = true;
+            if (setSessionExpiredMsg) setSessionExpiredMsg('');
+            login(data);
+            setIsLoading(false);
+            if (data.role === 'admin') {
+              navigate('/admin');
+            } else {
+              navigate('/account');
+            }
+            return;
+          } else if (res.status === 401 || res.status === 400) {
+            // Server explicitly rejected credentials
+            setIsLoading(false);
+            setError(data.message || 'Invalid email or password.');
+            return;
+          }
         }
-        return;
+      } catch (networkErr) {
+        // Fallback to client-side secure authDb if server is offline
       }
 
-      const data = await res.json();
-      setIsLoading(false);
+      // 2. Fallback / Edge Auth using SHA-256 password hash database & JWT
+      if (isRegisterMode) {
+        const registeredUser = await registerUser({
+          name: name ? name.trim() : cleanEmail.split('@')[0],
+          email: cleanEmail,
+          password: cleanPass
+        });
 
-      if (res.ok && data.token) {
-        login(data);
-        if (data.role === 'admin') {
+        const tokenPayload = {
+          userId: registeredUser.userId,
+          name: registeredUser.name,
+          email: registeredUser.email,
+          role: registeredUser.role
+        };
+        const token = createJwtToken(tokenPayload, sessionDurationSeconds);
+        const authUser = {
+          ...tokenPayload,
+          token,
+          expiresAt: Date.now() + sessionDurationSeconds * 1000
+        };
+
+        if (setSessionExpiredMsg) setSessionExpiredMsg('');
+        login(authUser);
+        setIsLoading(false);
+
+        if (authUser.role === 'admin') {
           navigate('/admin');
         } else {
           navigate('/account');
         }
       } else {
-        // If API rejects, try demo credentials fallback before showing error
-        const success = handleDemoAuth(cleanEmail, cleanPass, name);
-        if (!success) {
-          setError(data.message || 'Invalid email or password. Access denied.');
+        const verifiedUser = await verifyUserCredentials({
+          email: cleanEmail,
+          password: cleanPass
+        });
+
+        const tokenPayload = {
+          userId: verifiedUser.userId,
+          name: verifiedUser.name,
+          email: verifiedUser.email,
+          role: verifiedUser.role
+        };
+        const token = createJwtToken(tokenPayload, sessionDurationSeconds);
+        const authUser = {
+          ...tokenPayload,
+          token,
+          expiresAt: Date.now() + sessionDurationSeconds * 1000
+        };
+
+        if (setSessionExpiredMsg) setSessionExpiredMsg('');
+        login(authUser);
+        setIsLoading(false);
+
+        if (authUser.role === 'admin') {
+          navigate('/admin');
+        } else {
+          navigate('/account');
         }
       }
     } catch (err) {
       setIsLoading(false);
-      const success = handleDemoAuth(cleanEmail, cleanPass, name);
-      if (!success) {
-        setError('Invalid credentials. Please enter your email and password.');
-      }
+      setError(err.message || 'Authentication failed. Please check your credentials.');
     }
   };
 
