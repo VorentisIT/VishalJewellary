@@ -46,26 +46,10 @@ export const createJwtToken = (payload, expiresInSeconds = 86400) => {
 };
 
 export const ShopProvider = ({ children }) => {
-  // Cart State
+  // Cart State (Clean initial state - empty cart until user adds items)
   const [cart, setCart] = useState(() => {
     const saved = localStorage.getItem('vishal_cart') || localStorage.getItem('aurelia_cart');
-    return saved ? JSON.parse(saved) : [
-      {
-        _id: 'cart_item_1',
-        product: {
-          _id: 'mem_prod_1',
-          name: 'Celeste Diamond Ring',
-          slug: 'celeste-diamond-ring',
-          price: 48900,
-          metal: '18K Gold',
-          images: ['/assets/category_rings.jpg'],
-          category: 'Rings'
-        },
-        quantity: 1,
-        selectedSize: '7',
-        selectedMetal: '18K Gold'
-      }
-    ];
+    return saved ? JSON.parse(saved) : [];
   });
 
   // Wishlist State

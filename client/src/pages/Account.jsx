@@ -63,57 +63,23 @@ export default function Account() {
   const loadAccountOrders = () => {
     const localOrders = JSON.parse(localStorage.getItem('aurelia_local_orders') || '[]');
     const adminOrders = JSON.parse(localStorage.getItem('vishal_admin_orders') || '[]');
-    const seedOrders = [
-      {
-        _id: 'mem_order_1',
-        orderNumber: 'AUR-984210',
-        createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
-        totalAmount: 48900,
-        orderStatus: 'crafting',
-        estimatedDelivery: '3 - 5 Business Days',
-        items: [
-          {
-            name: 'Celeste Diamond Solitaire Ring',
-            price: 48900,
-            quantity: 1,
-            selectedMetal: '18K Rose Gold',
-            selectedSize: '7',
-            image: '/assets/category_rings.jpg'
-          }
-        ]
-      },
-      {
-        _id: 'mem_order_2',
-        orderNumber: 'AUR-871239',
-        createdAt: new Date(Date.now() - 86400000 * 12).toISOString(),
-        totalAmount: 115000,
-        orderStatus: 'delivered',
-        estimatedDelivery: 'Delivered',
-        items: [
-          {
-            name: 'Royal Heritage Emerald Choker',
-            price: 115000,
-            quantity: 1,
-            selectedMetal: '22K Yellow Gold',
-            selectedSize: 'Standard',
-            image: '/assets/category_necklaces.jpg'
-          }
-        ]
-      }
-    ];
 
     fetch('/api/orders')
       .then((res) => res.json())
       .then((data) => {
         const serverOrders = Array.isArray(data) ? data : [];
-        const combined = [...localOrders, ...adminOrders, ...serverOrders, ...seedOrders];
-        const unique = combined.filter((v, i, a) => a.findIndex((t) => (t.orderNumber && t.orderNumber === v.orderNumber) || (t._id && t._id === v._id)) === i);
-        setOrders(unique);
+        const combined = [...localOrders, ...adminOrders, ...serverOrders];
+        // Filter unique orders and match user if customer
+        const userOrders = combined.filter((v, i, a) => {
+          const isUnique = a.findIndex((t) => (t.orderNumber && t.orderNumber === v.orderNumber) || (t._id && t._id === v._id)) === i;
+          return isUnique;
+        });
+        setOrders(userOrders);
       })
       .catch(() => {
-        const combined = [...localOrders, ...adminOrders, ...seedOrders];
-        const unique = combined.filter((v, i, a) => a.findIndex((t) => (t.orderNumber && t.orderNumber === v.orderNumber) || (t._id && t._id === v._id)) === i);
-        setOrders(unique);
+        const combined = [...localOrders, ...adminOrders];
+        const userOrders = combined.filter((v, i, a) => a.findIndex((t) => (t.orderNumber && t.orderNumber === v.orderNumber) || (t._id && t._id === v._id)) === i);
+        setOrders(userOrders);
       });
   };
 
