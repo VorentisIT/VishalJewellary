@@ -17,7 +17,8 @@ const userSchema = new mongoose.Schema({
   password: {
     type: String,
     required: [true, 'Password is required'],
-    minlength: 6
+    minlength: 6,
+    select: false
   },
   role: {
     type: String,
@@ -42,7 +43,21 @@ const userSchema = new mongoose.Schema({
     ref: 'Product'
   }]
 }, {
-  timestamps: true
+  timestamps: true,
+  toJSON: {
+    transform(doc, ret) {
+      delete ret.password;
+      delete ret.__v;
+      return ret;
+    }
+  },
+  toObject: {
+    transform(doc, ret) {
+      delete ret.password;
+      delete ret.__v;
+      return ret;
+    }
+  }
 });
 
 userSchema.pre('save', async function (next) {
@@ -58,3 +73,4 @@ userSchema.methods.matchPassword = async function (enteredPassword) {
 
 const User = mongoose.model('User', userSchema);
 export default User;
+
