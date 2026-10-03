@@ -42,55 +42,28 @@ export default function Login() {
     }
 
     try {
-      const endpoint = isRegisterMode ? '/api/auth/register' : '/api/auth/login';
-      const payload = isRegisterMode
-        ? { name: name ? name.trim() : cleanEmail.split('@')[0], email: cleanEmail, password: cleanPass }
-        : { email: cleanEmail, password: cleanPass };
-
-      // 1. First attempt to call the Node.js / Express Server API
-      let serverAuthSuccess = false;
-      try {
-        const res = await fetch(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-
-        const contentType = res.headers.get('content-type') || '';
-        if (contentType.includes('application/json')) {
-          const data = await res.json();
-          if (res.ok && data.token) {
-            serverAuthSuccess = true;
-            if (setSessionExpiredMsg) setSessionExpiredMsg('');
-            login(data);
-            setIsLoading(false);
-            if (data.role === 'admin') {
-              navigate('/admin');
-            } else {
-              navigate('/account');
-            }
-            return;
-          } else if (res.status === 401 || res.status === 400) {
-            // If server requires client-side stored hash verification, proceed to authDb
-            if (!data.fallbackClientAuth) {
-              setIsLoading(false);
-              setError(data.message || 'Invalid email or password.');
-              return;
-            }
-          }
-        }
-      } catch (networkErr) {
-        // Fallback to client-side secure authDb if server is offline
-      }
-
-      // 2. Fallback / Edge Auth using SHA-256 password hash database & JWT
       if (isRegisterMode) {
+        // 1. ALWAYS persist registered user with SHA-256 password hash in authDb
         const registeredUser = await registerUser({
           name: name ? name.trim() : cleanEmail.split('@')[0],
           email: cleanEmail,
           password: cleanPass
         });
 
+        // 2. Also notify backend server if online
+        try {
+          fetch('/api/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: registeredUser.name,
+              email: cleanEmail,
+              password: cleanPass
+            })
+          }).catch(() => {});
+        } catch (e) {}
+
+        // 3. Issue verified JWT token and authenticate
         const tokenPayload = {
           userId: registeredUser.userId,
           name: registeredUser.name,
@@ -113,7 +86,42 @@ export default function Login() {
         } else {
           navigate('/account');
         }
+        return;
       } else {
+        // LOGIN FLOW: Check Server First, then AuthDb
+        let loggedIn = false;
+        try {
+          const res = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: cleanEmail, password: cleanPass })
+          });
+          const contentType = res.headers.get('content-type') || '';
+          if (contentType.includes('application/json')) {
+            const data = await res.json();
+            if (res.ok && data.token) {
+              loggedIn = true;
+              if (setSessionExpiredMsg) setSessionExpiredMsg('');
+              login(data);
+              setIsLoading(false);
+              if (data.role === 'admin') {
+                navigate('/admin');
+              } else {
+                navigate('/account');
+              }
+              return;
+            } else if (res.status === 401 && !data.fallbackClientAuth) {
+              // Server rejected credentials
+              setIsLoading(false);
+              setError(data.message || 'Incorrect email or password.');
+              return;
+            }
+          }
+        } catch (serverErr) {
+          // Server offline, fallback to client authDb
+        }
+
+        // Verify credentials with SHA-256 password hash in authDb
         const verifiedUser = await verifyUserCredentials({
           email: cleanEmail,
           password: cleanPass
