@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Lock, Mail, User, ShieldCheck } from 'lucide-react';
+import { Lock, Mail, User, ShieldCheck, Eye, EyeOff } from 'lucide-react';
 import AnnouncementBar from '../components/common/AnnouncementBar';
 import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
@@ -12,8 +12,9 @@ export default function Login() {
   const navigate = useNavigate();
 
   const [isRegisterMode, setIsRegisterMode] = useState(false);
-  const [email, setEmail] = useState('admin@gmail.com');
-  const [password, setPassword] = useState('admin123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [name, setName] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -179,11 +180,14 @@ export default function Login() {
           <form onSubmit={handleSubmit} className="space-y-4 text-xs">
             {isRegisterMode && (
               <div>
-                <label className="text-[11px] font-semibold uppercase text-[#202522] block mb-1">Full Name</label>
+                <label htmlFor="fullname" className="text-[11px] font-semibold uppercase text-[#202522] block mb-1">Full Name</label>
                 <div className="relative">
                   <User className="w-4 h-4 text-[#77736B] absolute left-3 top-3" />
                   <input
+                    id="fullname"
+                    name="name"
                     type="text"
+                    autoComplete="name"
                     placeholder="Priya Sharma"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
@@ -195,12 +199,15 @@ export default function Login() {
             )}
 
             <div>
-              <label className="text-[11px] font-semibold uppercase text-[#202522] block mb-1">Email Address</label>
+              <label htmlFor="email" className="text-[11px] font-semibold uppercase text-[#202522] block mb-1">Email Address</label>
               <div className="relative">
                 <Mail className="w-4 h-4 text-[#77736B] absolute left-3 top-3" />
                 <input
+                  id="email"
+                  name="email"
                   type="email"
-                  placeholder="admin@gmail.com"
+                  autoComplete="email"
+                  placeholder="Enter your email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -210,35 +217,35 @@ export default function Login() {
             </div>
 
             <div>
-              <label className="text-[11px] font-semibold uppercase text-[#202522] block mb-1">Password</label>
+              <label htmlFor="password" className="text-[11px] font-semibold uppercase text-[#202522] block mb-1">Password</label>
               <div className="relative">
-                <Lock className="w-4 h-4 text-[#77736B] absolute left-3 top-3" />
+                <Lock className="w-4 h-4 text-[#77736B] absolute left-3 top-3.5" />
                 <input
-                  type="password"
-                  placeholder="••••••••"
+                  id="password"
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete={isRegisterMode ? 'new-password' : 'current-password'}
+                  placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="w-full pl-9 p-3 bg-[#F8F5EE] border border-[#DED8CC] text-xs focus:outline-none"
+                  className="w-full pl-9 pr-10 p-3 bg-[#F8F5EE] border border-[#DED8CC] text-xs focus:outline-none"
                 />
-              </div>
-            </div>
-
-            {/* Admin Quick Credentials hint */}
-            <div className="bg-[#F5EFE6] border border-[#DED8CC] p-3 text-[11px] text-[#77736B] space-y-1">
-              <span className="font-bold text-[#202522] block">Quick Demo Logins:</span>
-              <div className="flex justify-between cursor-pointer hover:text-[#C49A5A]" onClick={() => { setEmail('admin@gmail.com'); setPassword('admin123'); }}>
-                <span>Admin Login:</span> <strong>admin@gmail.com / admin123</strong>
-              </div>
-              <div className="flex justify-between cursor-pointer hover:text-[#C49A5A]" onClick={() => { setEmail('priya@example.com'); setPassword('customerpassword123'); }}>
-                <span>Customer Login:</span> <strong>priya@example.com</strong>
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-3.5 text-stone-400 hover:text-stone-700 cursor-pointer"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
             </div>
 
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-[#D96B27] text-white text-xs font-semibold uppercase tracking-widest py-4 hover:bg-[#B85517] transition-all flex items-center justify-center gap-2 shadow-md shadow-[#D96B27]/25"
+              className="w-full bg-[#D96B27] text-white text-xs font-semibold uppercase tracking-widest py-4 hover:bg-[#B85517] transition-all flex items-center justify-center gap-2 shadow-md shadow-[#D96B27]/25 cursor-pointer active:scale-[0.99]"
             >
               {isLoading ? 'Authenticating...' : (isRegisterMode ? 'Create Account' : 'Sign In')}
             </button>
@@ -247,7 +254,7 @@ export default function Login() {
           <div className="text-center pt-2 text-xs border-t border-[#DED8CC]">
             <button
               onClick={() => setIsRegisterMode(!isRegisterMode)}
-              className="text-[#D96B27] hover:underline font-semibold"
+              className="text-[#D96B27] hover:underline font-semibold cursor-pointer"
             >
               {isRegisterMode ? 'Already have an account? Sign In' : "Don't have an account? Create One"}
             </button>

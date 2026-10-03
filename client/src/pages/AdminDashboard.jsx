@@ -302,6 +302,631 @@ function CouponGreenLineChart({ data = [], trend = '+12% this month' }) {
   );
 }
 
+function KpiSparkline({
+  color = '#D96B27',
+  data = [10, 14, 18, 16, 22, 21, 26, 30],
+  labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun', 'Today'],
+  formatValue = (val) => `${val}`
+}) {
+  const [hoverData, setHoverData] = useState(null);
+  const containerRef = useRef(null);
+
+  const width = 240;
+  const height = 54;
+  const padLeft = 6;
+  const padRight = 8;
+  const padTop = 8;
+  const padBottom = 6;
+  const plotW = width - padLeft - padRight;
+  const plotH = height - padTop - padBottom;
+
+  const min = Math.min(...data);
+  const max = Math.max(...data);
+  const range = max - min || 1;
+
+  const points = data.map((val, idx) => ({
+    label: labels[idx] || `Point ${idx + 1}`,
+    val,
+    x: padLeft + (idx / Math.max(1, data.length - 1)) * plotW,
+    y: padTop + plotH - ((val - min) / range) * plotH
+  }));
+
+  // Smooth cubic Bezier spline for luxury fluid sparklines
+  const getCurvedPath = (pts) => {
+    if (pts.length === 0) return '';
+    if (pts.length === 1) return `M ${pts[0].x} ${pts[0].y}`;
+    let d = `M ${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)}`;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const p0 = pts[i === 0 ? i : i - 1];
+      const p1 = pts[i];
+      const p2 = pts[i + 1];
+      const p3 = pts[i + 2] || p2;
+      const cp1x = p1.x + (p2.x - p0.x) / 5.5;
+      const cp1y = p1.y + (p2.y - p0.y) / 5.5;
+      const cp2x = p2.x - (p3.x - p1.x) / 5.5;
+      const cp2y = p2.y - (p3.y - p1.y) / 5.5;
+      d += ` C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
+    }
+    return d;
+  };
+
+  const pathD = getCurvedPath(points);
+  const areaD = `${pathD} L ${points[points.length - 1].x.toFixed(1)} ${padTop + plotH + 4} L ${points[0].x.toFixed(1)} ${padTop + plotH + 4} Z`;
+  const gradId = `kpiGrad-${color.replace(/[^a-zA-Z0-9]/g, '')}`;
+
+  const handlePointerMove = (e) => {
+    if (!containerRef.current || points.length === 0) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const clientX = e.clientX - rect.left;
+    const clientY = e.clientY - rect.top;
+    const svgX = (clientX / rect.width) * width;
+
+    let closest = 0;
+    let minDiff = Infinity;
+    points.forEach((pt, i) => {
+      const diff = Math.abs(pt.x - svgX);
+      if (diff < minDiff) {
+        minDiff = diff;
+        closest = i;
+      }
+    });
+
+    setHoverData({
+      idx: closest,
+      cursorX: clientX,
+      cursorY: clientY,
+      point: points[closest]
+    });
+  };
+
+  return (
+    <div
+      ref={containerRef}
+      className="relative w-full h-12 select-none cursor-crosshair"
+      onMouseMove={handlePointerMove}
+      onTouchMove={handlePointerMove}
+      onMouseLeave={() => setHoverData(null)}
+    >
+      <svg
+        viewBox={`0 0 ${width} ${height}`}
+        className="w-full h-full overflow-visible pointer-events-none"
+      >
+        <defs>
+          <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={color} stopOpacity="0.38" />
+            <stop offset="100%" stopColor={color} stopOpacity="0.0" />
+          </linearGradient>
+        </defs>
+
+        {/* Filled Area */}
+        <path d={areaD} fill={`url(#${gradId})`} />
+
+        {/* Curve Line */}
+        <path d={pathD} fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+
+        {/* Dots along the line matching reference image */}
+        {points.map((pt, idx) => {
+          const isLast = idx === points.length - 1;
+          return (
+            <g key={idx}>
+              {isLast && (
+                <circle
+                  cx={pt.x}
+                  cy={pt.y}
+                  r="7"
+                  fill={color}
+                  fillOpacity="0.25"
+                />
+              )}
+              <circle
+                cx={pt.x}
+                cy={pt.y}
+                r={isLast ? "4" : "3"}
+                fill={color}
+                stroke="#FFFFFF"
+                strokeWidth="1.8"
+              />
+            </g>
+          );
+        })}
+
+        {/* Active hover vertical dashed guide line & glowing circle */}
+        {hoverData && (
+          <g className="pointer-events-none">
+            <line
+              x1={hoverData.point.x}
+              y1={padTop - 4}
+              x2={hoverData.point.x}
+              y2={padTop + plotH}
+              stroke={color}
+              strokeDasharray="2 2"
+              strokeWidth="1.2"
+              strokeOpacity="0.9"
+            />
+            <circle
+              cx={hoverData.point.x}
+              cy={hoverData.point.y}
+              r="5.5"
+              fill={color}
+              stroke="#FFFFFF"
+              strokeWidth="2"
+            />
+          </g>
+        )}
+      </svg>
+
+      {/* Dynamic Floating Tooltip positioned right at cursor */}
+      {hoverData && (
+        <div
+          className="absolute z-50 pointer-events-none transform -translate-x-1/2 -translate-y-full bg-stone-900/95 backdrop-blur-xs text-white text-[9.5px] px-2.5 py-1 rounded-lg shadow-lg flex items-center gap-1.5 whitespace-nowrap border border-stone-700"
+          style={{
+            left: `${hoverData.cursorX}px`,
+            top: `${Math.max(-10, hoverData.cursorY - 8)}px`
+          }}
+        >
+          <span className="text-stone-300 font-sans font-medium">{hoverData.point.label}:</span>
+          <span className="font-bold text-amber-400 font-mono">{formatValue(hoverData.point.val)}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function DashboardSelectDropdown({ value, options, onChange, minWidth = 'w-36' }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    }
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOpen]);
+
+  const current = options.find((o) => o.value === value) || options[0];
+
+  return (
+    <div className="relative inline-block text-left" ref={dropdownRef}>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="text-[11px] font-medium text-stone-700 bg-white hover:bg-stone-50 border border-stone-200 px-2.5 py-1.5 rounded-xl flex items-center gap-1.5 shadow-2xs transition-all active:scale-95 outline-none cursor-pointer"
+      >
+        <span>{current.label}</span>
+        <ChevronDown className={`w-3 h-3 text-stone-400 transition-transform duration-200 ${isOpen ? 'rotate-180 text-stone-700' : ''}`} />
+      </button>
+
+      {isOpen && (
+        <div className={`absolute right-0 mt-1.5 ${minWidth} bg-white border border-stone-200 rounded-xl shadow-xl p-1 z-50 animate-tabFadeIn space-y-0.5`}>
+          {options.map((opt) => {
+            const isSelected = opt.value === value;
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => {
+                  onChange(opt.value);
+                  setIsOpen(false);
+                }}
+                className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition-all text-left ${
+                  isSelected
+                    ? 'bg-amber-50 text-[#D96B27] font-bold'
+                    : 'text-stone-700 hover:bg-stone-50 hover:text-stone-900'
+                }`}
+              >
+                <span>{opt.label}</span>
+                {isSelected && <Check className="w-3 h-3 text-[#D96B27]" />}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+const SALES_TIMEFRAME_DATA = {
+  '6M': {
+    months: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+    revenue: [520000, 810000, 1050000, 1120000, 1280000, 1480000],
+    orders: [14, 21, 28, 30, 35, 42],
+    revenueMax: 2000000,
+    ordersMax: 50,
+    revenueYTicks: ['20L', '15L', '10L', '5L'],
+    ordersYTicks: ['50', '35', '20', '10'],
+    defaultHover: 5
+  },
+  '3M': {
+    months: ['Apr', 'May', 'Jun'],
+    revenue: [1120000, 1280000, 1480000],
+    orders: [30, 35, 42],
+    revenueMax: 2000000,
+    ordersMax: 50,
+    revenueYTicks: ['20L', '15L', '10L', '5L'],
+    ordersYTicks: ['50', '35', '20', '10'],
+    defaultHover: 2
+  },
+  '30D': {
+    months: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+    revenue: [280000, 390000, 410000, 400000],
+    orders: [8, 11, 12, 11],
+    revenueMax: 500000,
+    ordersMax: 15,
+    revenueYTicks: ['5L', '3.75L', '2.5L', '1.25L'],
+    ordersYTicks: ['15', '11', '8', '4'],
+    defaultHover: 3
+  },
+  '1Y': {
+    months: ['Q1 2025', 'Q2 2025', 'Q3 2025', 'Q4 2025', 'Q1 2026', 'Q2 2026'],
+    revenue: [1850000, 2400000, 2900000, 3400000, 3880000, 4200000],
+    orders: [48, 62, 75, 89, 102, 118],
+    revenueMax: 5000000,
+    ordersMax: 140,
+    revenueYTicks: ['50L', '37.5L', '25L', '12.5L'],
+    ordersYTicks: ['140', '100', '60', '20'],
+    defaultHover: 5
+  }
+};
+
+function MonthlySalesVelocityChart({ metric = 'revenue', timeframe = '6M' }) {
+  const currentSet = SALES_TIMEFRAME_DATA[timeframe] || SALES_TIMEFRAME_DATA['6M'];
+  const [hoveredIdx, setHoveredIdx] = useState(currentSet.defaultHover);
+  const svgRef = useRef(null);
+
+  useEffect(() => {
+    setHoveredIdx(currentSet.defaultHover);
+  }, [timeframe, metric]);
+
+  const months = currentSet.months;
+  const data = metric === 'revenue' ? currentSet.revenue : currentSet.orders;
+  const max = metric === 'revenue' ? currentSet.revenueMax : currentSet.ordersMax;
+  const yTicks = metric === 'revenue' ? currentSet.revenueYTicks : currentSet.ordersYTicks;
+
+  const width = 580;
+  const height = 180;
+  const padLeft = 40;
+  const padRight = 20;
+  const padTop = 24;
+  const padBottom = 30;
+  const plotW = width - padLeft - padRight;
+  const plotH = height - padTop - padBottom;
+
+  const points = data.map((val, idx) => ({
+    label: months[idx],
+    val,
+    x: padLeft + (idx / Math.max(1, data.length - 1)) * plotW,
+    y: padTop + plotH - (val / max) * plotH
+  }));
+
+  const pathD = points.reduce((acc, pt, idx) => `${acc} ${idx === 0 ? 'M' : 'L'} ${pt.x.toFixed(1)} ${pt.y.toFixed(1)}`, '');
+  const areaD = `${pathD} L ${points[points.length - 1].x} ${padTop + plotH} L ${points[0].x} ${padTop + plotH} Z`;
+
+  // Full-grid pointer tracking so hovering anywhere over the chart updates instantly
+  const handlePointerMove = (e) => {
+    if (!svgRef.current || points.length === 0) return;
+    const rect = svgRef.current.getBoundingClientRect();
+    const clientX = e.clientX - rect.left;
+    const svgX = (clientX / rect.width) * width;
+
+    let closestIdx = 0;
+    let minDiff = Infinity;
+    points.forEach((pt, idx) => {
+      const diff = Math.abs(pt.x - svgX);
+      if (diff < minDiff) {
+        minDiff = diff;
+        closestIdx = idx;
+      }
+    });
+    setHoveredIdx(closestIdx);
+  };
+
+  return (
+    <div className="relative w-full overflow-visible">
+      <svg
+        ref={svgRef}
+        viewBox={`0 0 ${width} ${height}`}
+        className="w-full h-auto overflow-visible select-none cursor-crosshair"
+        onMouseMove={handlePointerMove}
+        onTouchMove={handlePointerMove}
+      >
+        <defs>
+          <linearGradient id="salesAreaGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#D96B27" stopOpacity="0.22" />
+            <stop offset="100%" stopColor="#D96B27" stopOpacity="0.0" />
+          </linearGradient>
+          <filter id="tooltipDropShadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="0" dy="4" stdDeviation="4" floodColor="#000000" floodOpacity="0.12" />
+          </filter>
+        </defs>
+
+        {/* Horizontal Grid lines */}
+        {[0, 1, 2, 3].map((i) => {
+          const y = padTop + (i / 3) * plotH;
+          return (
+            <g key={i}>
+              <line x1={padLeft} y1={y} x2={width - padRight} y2={y} stroke="#F0EBE1" strokeDasharray="3 3" strokeWidth="1" />
+              <text x={padLeft - 8} y={y + 3.5} fill="#A8A29E" fontSize="9" fontWeight="bold" fontFamily="monospace" textAnchor="end">
+                {yTicks[i]}
+              </text>
+            </g>
+          );
+        })}
+
+        {/* Translucent Area Fill */}
+        <path d={areaD} fill="url(#salesAreaGrad)" />
+
+        {/* Line Curve */}
+        <path d={pathD} fill="none" stroke="#D96B27" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+
+        {/* Full-height vertical slice hit areas across the entire grid */}
+        {points.map((pt, idx) => {
+          const colStep = points.length > 1 ? plotW / (points.length - 1) : plotW;
+          const colX = idx === 0 ? padLeft : pt.x - colStep / 2;
+          const colW = (idx === 0 || idx === points.length - 1) ? colStep / 2 + 10 : colStep;
+          return (
+            <rect
+              key={`slice-${idx}`}
+              x={colX}
+              y={padTop - 10}
+              width={colW}
+              height={plotH + 20}
+              fill="transparent"
+              className="cursor-pointer"
+              onMouseEnter={() => setHoveredIdx(idx)}
+            />
+          );
+        })}
+
+        {/* Active Column Guide & Vertical Line */}
+        {hoveredIdx !== null && points[hoveredIdx] && (
+          <g className="pointer-events-none transition-all duration-150">
+            <rect
+              x={points[hoveredIdx].x - (plotW / Math.max(1, points.length - 1)) / 2}
+              y={padTop}
+              width={plotW / Math.max(1, points.length - 1)}
+              height={plotH}
+              fill="#D96B27"
+              fillOpacity="0.04"
+              rx="4"
+            />
+            <line
+              x1={points[hoveredIdx].x}
+              y1={padTop}
+              x2={points[hoveredIdx].x}
+              y2={padTop + plotH}
+              stroke="#D96B27"
+              strokeDasharray="3 3"
+              strokeWidth="1.5"
+              strokeOpacity="0.8"
+            />
+          </g>
+        )}
+
+        {/* Data points & X-axis labels */}
+        {points.map((pt, idx) => {
+          const isHovered = hoveredIdx === idx;
+          return (
+            <g key={idx} className="cursor-pointer" onMouseEnter={() => setHoveredIdx(idx)}>
+              {/* Point glowing ring on hover */}
+              {isHovered && (
+                <circle
+                  cx={pt.x}
+                  cy={pt.y}
+                  r="9"
+                  fill="#D96B27"
+                  fillOpacity="0.25"
+                />
+              )}
+
+              {/* Point circle */}
+              <circle
+                cx={pt.x}
+                cy={pt.y}
+                r={isHovered ? "5.5" : "3.5"}
+                fill={isHovered ? "#B85517" : "#D96B27"}
+                stroke="#FFFFFF"
+                strokeWidth={isHovered ? "2.5" : "2"}
+                className="transition-all duration-150"
+              />
+
+              {/* X Axis Month Label */}
+              <text
+                x={pt.x}
+                y={height - 6}
+                fill={isHovered ? "#1C1917" : "#78716C"}
+                fontSize={isHovered ? "10.5" : "10"}
+                fontWeight={isHovered ? "bold" : "600"}
+                textAnchor="middle"
+                className="transition-colors duration-150"
+              >
+                {pt.label}
+              </text>
+            </g>
+          );
+        })}
+
+        {/* Top-layer Floating Tooltip Badge with drop shadow */}
+        {hoveredIdx !== null && points[hoveredIdx] && (() => {
+          const pt = points[hoveredIdx];
+          const tooltipW = 104;
+          const tooltipH = 32;
+          const tooltipX = Math.max(padLeft - 10, Math.min(width - padRight - tooltipW + 10, pt.x - tooltipW / 2));
+          const tooltipY = Math.max(2, pt.y - tooltipH - 8);
+
+          return (
+            <g className="pointer-events-none transition-all duration-150" filter="url(#tooltipDropShadow)">
+              <rect
+                x={tooltipX}
+                y={tooltipY}
+                width={tooltipW}
+                height={tooltipH}
+                rx="8"
+                fill="#FFFFFF"
+                stroke="#E7E5E4"
+                strokeWidth="1.2"
+              />
+              <circle
+                cx={tooltipX + 13}
+                cy={tooltipY + tooltipH / 2}
+                r="3"
+                fill="#D96B27"
+              />
+              <text
+                x={tooltipX + 22}
+                y={tooltipY + 12}
+                fill="#78716C"
+                fontSize="8.5"
+                fontWeight="600"
+              >
+                {pt.label.includes('Q') || pt.label.includes('Week') ? pt.label : `${pt.label} 2026`}
+              </text>
+              <text
+                x={tooltipX + 22}
+                y={tooltipY + 24}
+                fill="#1C1917"
+                fontSize="10"
+                fontWeight="bold"
+                fontFamily="monospace"
+              >
+                {metric === 'revenue' ? formatINR(pt.val) : `${pt.val} orders`}
+              </text>
+            </g>
+          );
+        })()}
+      </svg>
+    </div>
+  );
+}
+
+const CATEGORY_TIMEFRAME_DATA = {
+  this_month: {
+    totalSales: '₹28.45L',
+    categories: [
+      { label: 'Rings & Solitaires', pct: 42, color: '#D96B27' },
+      { label: 'Necklaces & Sets', pct: 28, color: '#EA580C' },
+      { label: 'The Bridal Edit', pct: 18, color: '#A855F7' },
+      { label: 'Bracelets & Earrings', pct: 12, color: '#10B981' }
+    ]
+  },
+  last_month: {
+    totalSales: '₹24.10L',
+    categories: [
+      { label: 'Rings & Solitaires', pct: 38, color: '#D96B27' },
+      { label: 'Necklaces & Sets', pct: 32, color: '#EA580C' },
+      { label: 'The Bridal Edit', pct: 16, color: '#A855F7' },
+      { label: 'Bracelets & Earrings', pct: 14, color: '#10B981' }
+    ]
+  },
+  last_quarter: {
+    totalSales: '₹76.80L',
+    categories: [
+      { label: 'Rings & Solitaires', pct: 45, color: '#D96B27' },
+      { label: 'Necklaces & Sets', pct: 26, color: '#EA580C' },
+      { label: 'The Bridal Edit', pct: 19, color: '#A855F7' },
+      { label: 'Bracelets & Earrings', pct: 10, color: '#10B981' }
+    ]
+  },
+  all_time: {
+    totalSales: '₹1.84Cr',
+    categories: [
+      { label: 'Rings & Solitaires', pct: 40, color: '#D96B27' },
+      { label: 'Necklaces & Sets', pct: 30, color: '#EA580C' },
+      { label: 'The Bridal Edit', pct: 18, color: '#A855F7' },
+      { label: 'Bracelets & Earrings', pct: 12, color: '#10B981' }
+    ]
+  }
+};
+
+function CategoryDonutChart({ timeframe = 'this_month' }) {
+  const currentSet = CATEGORY_TIMEFRAME_DATA[timeframe] || CATEGORY_TIMEFRAME_DATA.this_month;
+  const categories = currentSet.categories;
+  const [hoveredCategory, setHoveredCategory] = useState(null);
+
+  const size = 180;
+  const strokeWidth = 24;
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+
+  let accumulatedPct = 0;
+
+  return (
+    <div className="flex flex-col sm:flex-row items-center gap-6">
+      {/* SVG Donut */}
+      <div className="relative w-40 h-40 shrink-0 flex items-center justify-center">
+        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="w-full h-full transform -rotate-90 select-none">
+          {categories.map((cat, idx) => {
+            const isHovered = hoveredCategory === idx;
+            const strokeDasharray = `${(cat.pct / 100) * circumference} ${circumference}`;
+            const strokeDashoffset = -((accumulatedPct / 100) * circumference);
+            accumulatedPct += cat.pct;
+            return (
+              <circle
+                key={idx}
+                cx={size / 2}
+                cy={size / 2}
+                r={radius}
+                fill="transparent"
+                stroke={cat.color}
+                strokeWidth={isHovered ? strokeWidth + 4 : strokeWidth}
+                strokeDasharray={strokeDasharray}
+                strokeDashoffset={strokeDashoffset}
+                onMouseEnter={() => setHoveredCategory(idx)}
+                onMouseLeave={() => setHoveredCategory(null)}
+                className="transition-all duration-200 cursor-pointer"
+                opacity={hoveredCategory !== null && !isHovered ? 0.45 : 1}
+              />
+            );
+          })}
+        </svg>
+        {/* Center Text */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none transition-all">
+          {hoveredCategory !== null ? (
+            <>
+              <span className="font-bold text-base text-stone-900 font-mono leading-tight">{categories[hoveredCategory].pct}%</span>
+              <span className="text-[9px] text-[#D96B27] font-bold truncate max-w-[85px]">{categories[hoveredCategory].label}</span>
+            </>
+          ) : (
+            <>
+              <span className="font-serif font-bold text-sm sm:text-base text-stone-900 leading-tight">{currentSet.totalSales}</span>
+              <span className="text-[10px] text-stone-400 font-medium">Total Sales</span>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Legend with percentages matching reference */}
+      <div className="flex-1 w-full space-y-2 text-xs">
+        {categories.map((cat, idx) => {
+          const isHovered = hoveredCategory === idx;
+          return (
+            <div
+              key={idx}
+              onMouseEnter={() => setHoveredCategory(idx)}
+              onMouseLeave={() => setHoveredCategory(null)}
+              className={`flex items-center justify-between p-1.5 rounded-lg transition-all duration-200 cursor-pointer ${
+                isHovered ? 'bg-stone-100 scale-[1.02]' : 'hover:bg-stone-50'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full shrink-0 transition-transform" style={{ backgroundColor: cat.color }} />
+                <span className={`transition-colors ${isHovered ? 'font-bold text-stone-900' : 'text-stone-700 font-medium'}`}>
+                  {cat.label}
+                </span>
+              </div>
+              <span className="font-bold text-stone-900 font-mono">{cat.pct}%</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function AdminDashboard() {
   const { user, logout } = useShop();
   const navigate = useNavigate();
@@ -313,7 +938,7 @@ export default function AdminDashboard() {
   }, [user, navigate]);
 
   // Navigation State
-  const [activeTab, setActiveTab] = useState('coupons'); // overview | products | orders | coupons | customers | settings
+  const [activeTab, setActiveTab] = useState('overview'); // overview | products | orders | coupons | customers | settings
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
 
@@ -388,6 +1013,9 @@ export default function AdminDashboard() {
   const [orderSearch, setOrderSearch] = useState('');
   const [orderStatusFilter, setOrderStatusFilter] = useState('All');
   const [chartMetric, setChartMetric] = useState('revenue');
+  const [salesTimeframe, setSalesTimeframe] = useState('6M');
+  const [categoryTimeframe, setCategoryTimeframe] = useState('this_month');
+  const [activityFilter, setActivityFilter] = useState('all');
 
   // Product Modal State & Image Upload Handling
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
@@ -582,24 +1210,34 @@ export default function AdminDashboard() {
       .catch(() => {});
   }, []);
 
-  const handleRefreshData = () => {
+  const handleRefreshData = async () => {
     setIsRefreshing(true);
-    fetch('/api/orders')
-      .then((res) => res.json())
-      .then((data) => {
-        if (Array.isArray(data)) {
-          const localOrders = JSON.parse(localStorage.getItem('aurelia_local_orders') || '[]');
-          const combined = [...localOrders, ...data];
-          const unique = combined.filter((v, i, a) => a.findIndex((t) => t.orderNumber === v.orderNumber || t._id === v._id) === i);
-          setOrders(unique);
-        }
-      })
-      .catch(() => {});
+    try {
+      const [oRes, pRes, aRes] = await Promise.allSettled([
+        fetch('/api/orders').then((r) => r.json()),
+        fetch('/api/products').then((r) => r.json()),
+        fetch('/api/admin/analytics').then((r) => r.json())
+      ]);
 
-    setTimeout(() => {
-      setIsRefreshing(false);
-      showToast('Store data refreshed.');
-    }, 500);
+      if (oRes.status === 'fulfilled' && Array.isArray(oRes.value)) {
+        const localOrders = JSON.parse(localStorage.getItem('aurelia_local_orders') || '[]');
+        const combined = [...localOrders, ...oRes.value];
+        const unique = combined.filter((v, i, a) => a.findIndex((t) => t.orderNumber === v.orderNumber || t._id === v._id) === i);
+        setOrders(unique);
+      }
+      if (pRes.status === 'fulfilled' && pRes.value.products) {
+        setProducts(pRes.value.products);
+      }
+      if (aRes.status === 'fulfilled' && aRes.value) {
+        setAnalytics(aRes.value);
+      }
+      showToast('Store data synchronized successfully');
+    } catch (err) {
+      console.error(err);
+      showToast('Store data refreshed');
+    } finally {
+      setTimeout(() => setIsRefreshing(false), 500);
+    }
   };
 
   const handleSaveProduct = async (e) => {
@@ -770,8 +1408,43 @@ export default function AdminDashboard() {
     { id: 'settings', label: 'Store Settings', icon: Settings }
   ];
 
+  const SALES_TIMEFRAME_OPTIONS = [
+    { value: '6M', label: 'Last 6 Months' },
+    { value: '3M', label: 'Last 3 Months' },
+    { value: '30D', label: 'Last 30 Days' },
+    { value: '1Y', label: 'This Year (2026)' }
+  ];
+
+  const CATEGORY_TIMEFRAME_OPTIONS = [
+    { value: 'this_month', label: 'This Month' },
+    { value: 'last_month', label: 'Last Month' },
+    { value: 'last_quarter', label: 'Last Quarter' },
+    { value: 'all_time', label: 'All Time' }
+  ];
+
+  const ACTIVITY_FILTER_OPTIONS = [
+    { value: 'all', label: 'All Activities' },
+    { value: 'orders', label: 'Orders Placed' },
+    { value: 'hallmark', label: 'Hallmark & QC' },
+    { value: 'transit', label: 'Dispatches' },
+    { value: 'store', label: 'Catalogue & Clients' }
+  ];
+
+  const ALL_ACTIVITIES = [
+    { id: 1, type: 'orders', icon: ShoppingCart, iconBg: 'bg-emerald-50 text-emerald-700 border-emerald-100', title: 'Order Placed (#AUR-984210)', time: '5 mins ago', desc: 'Priya Sharma ordered Celeste Diamond Ring (₹48,900)' },
+    { id: 2, type: 'hallmark', icon: ShieldCheck, iconBg: 'bg-purple-50 text-purple-700 border-purple-100', title: 'Hallmark 916 Verified', time: '1 hour ago', desc: 'Batch #BH-8842 passed purity testing' },
+    { id: 3, type: 'transit', icon: Truck, iconBg: 'bg-blue-50 text-blue-700 border-blue-100', title: 'Dispatched to Hyderabad', time: 'Yesterday', desc: 'Order #AUR-773190 handed to insured express courier' },
+    { id: 4, type: 'store', icon: Package, iconBg: 'bg-orange-50 text-orange-700 border-orange-100', title: 'New Jewellery Added', time: '2 days ago', desc: 'Solara Gold Bracelet added to catalogue' },
+    { id: 5, type: 'store', icon: Users, iconBg: 'bg-pink-50 text-pink-700 border-pink-100', title: 'New Customer Registered', time: '2 days ago', desc: 'Anita Verma joined the store' }
+  ];
+
+  const filteredActivities = ALL_ACTIVITIES.filter((a) => {
+    if (activityFilter === 'all') return true;
+    return a.type === activityFilter;
+  });
+
   return (
-    <div className="fixed inset-0 h-screen w-screen overflow-hidden bg-[#FBF9F5] text-[#1E2420] flex flex-col font-sans antialiased">
+    <div className="fixed inset-0 h-screen w-screen overflow-hidden bg-white text-[#1E2420] flex flex-col font-sans antialiased">
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed top-5 right-5 z-[100] bg-white border border-stone-200 text-stone-900 px-4 py-3 rounded-2xl shadow-xl text-xs flex items-center gap-2.5 animate-fadeIn">
@@ -782,10 +1455,10 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* CLEAN LUXURY NAVBAR */}
-      <header className="flex-shrink-0 h-16 bg-white/95 backdrop-blur-md border-b border-[#EFEAE2] px-4 sm:px-8 flex items-center justify-between gap-4 shadow-sm z-40">
-        {/* Left: Brand Identity */}
-        <div className="flex items-center gap-4">
+      {/* CLEAN LUXURY NAVBAR MATCHING REFERENCE */}
+      <header className="flex-shrink-0 h-16 bg-white border-b border-stone-200 px-4 sm:px-8 flex items-center justify-between gap-4 shadow-xs z-40">
+        {/* Left: Brand Logo */}
+        <div className="flex items-center gap-3.5">
           <button
             onClick={() => setIsMobileSidebarOpen(true)}
             className="md:hidden p-2 text-stone-600 hover:text-stone-900 rounded-xl"
@@ -794,35 +1467,40 @@ export default function AdminDashboard() {
             <Menu className="w-5 h-5" />
           </button>
 
-          <Link to="/" className="flex items-center gap-3 group">
+          <Link to="/" className="flex items-center gap-2 group" title="Vishal Jewellery - Go to Home">
             <img
               src="/assets/vishal_jewellery_logo.png"
               alt="Vishal Jewellery"
               className="h-9 w-auto object-contain transition-transform group-hover:scale-105"
             />
-            <div>
-              <span className="font-serif text-base sm:text-lg font-bold tracking-wider text-[#1A201C] uppercase block leading-none">
-                VISHAL JEWELLERY
-              </span>
-              <span className="text-[10px] text-stone-400 font-medium tracking-wider uppercase mt-1 block">
-                Admin Portal
-              </span>
-            </div>
           </Link>
         </div>
 
-        {/* Right: Actions & User (Standardized Uniform Buttons) */}
-        <div className="flex items-center gap-2.5 text-xs">
-          {/* 1. View Store */}
+        {/* Center: Global Search Bar matching reference image */}
+        <div className="hidden md:flex items-center gap-2 bg-[#FAFAFA] border border-stone-200 rounded-2xl px-3.5 py-1.5 w-72 lg:w-96 text-xs text-stone-500 shadow-xs focus-within:border-amber-400 focus-within:bg-white transition-all">
+          <Search className="w-3.5 h-3.5 text-stone-400 shrink-0" />
+          <input
+            type="text"
+            placeholder="Search products, orders, customers..."
+            className="bg-transparent outline-none w-full text-xs text-stone-800 placeholder-stone-400"
+          />
+          <kbd className="text-[10px] font-mono text-stone-400 bg-white border border-stone-200 px-1.5 py-0.5 rounded shadow-2xs select-none">
+            /
+          </kbd>
+        </div>
+
+        {/* Right: Actions */}
+        <div className="flex items-center gap-2 text-xs">
+          {/* 1. View Live Store */}
           <Link
             to="/"
             target="_blank"
             rel="noopener noreferrer"
-            className="h-9 px-3.5 bg-[#FAF8F5] hover:bg-stone-100 border border-stone-200 text-stone-700 rounded-xl transition-all font-semibold shadow-xs flex items-center gap-2 active:scale-95"
+            className="h-9 px-3.5 bg-stone-50 hover:bg-stone-100 border border-stone-200 text-stone-700 rounded-xl transition-all font-semibold shadow-xs flex items-center gap-2 active:scale-95"
             title="View Live Store"
           >
             <Eye className="w-3.5 h-3.5 text-[#D96B27]" />
-            <span>View Store</span>
+            <span className="hidden sm:inline">View Store</span>
             <ExternalLink className="w-3 h-3 text-stone-400" />
           </Link>
 
@@ -846,13 +1524,24 @@ export default function AdminDashboard() {
               });
               setIsProductModalOpen(true);
             }}
-            className="h-9 px-3.5 bg-[#D96B27] hover:bg-[#C05619] text-white font-bold rounded-xl shadow-xs transition-all flex items-center gap-2 active:scale-95"
+            className="h-9 px-3.5 sm:px-4 bg-[#D96B27] hover:bg-[#C05619] text-white font-bold rounded-xl shadow-xs transition-all flex items-center gap-1.5 active:scale-95 cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span className="hidden sm:inline">Add Product</span>
           </button>
 
-          {/* 3. Notification Bell */}
+          {/* 3. Live Sync / Refresh Button */}
+          <button
+            onClick={handleRefreshData}
+            disabled={isRefreshing}
+            className="h-9 px-2.5 sm:px-3 bg-stone-50 hover:bg-stone-100 border border-stone-200 text-stone-700 rounded-xl transition-all font-semibold shadow-xs flex items-center gap-1.5 active:scale-95 cursor-pointer disabled:opacity-50"
+            title="Sync live data from database"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 text-stone-600 ${isRefreshing ? 'animate-spin text-[#D96B27]' : ''}`} />
+            <span className="hidden md:inline font-medium text-[11px]">{isRefreshing ? 'Syncing...' : 'Sync'}</span>
+          </button>
+
+          {/* 4. Notification Bell */}
           <div
             className="relative"
             onMouseEnter={() => {
@@ -867,11 +1556,11 @@ export default function AdminDashboard() {
           >
             <button
               onClick={() => setIsNotificationOpen(!isNotificationOpen)}
-              className="h-9 w-9 bg-[#FAF8F5] hover:bg-stone-100 border border-stone-200 text-stone-700 rounded-xl transition-all font-semibold shadow-xs flex items-center justify-center relative active:scale-95 outline-none"
+              className="h-9 w-9 bg-stone-50 hover:bg-stone-100 border border-stone-200 text-stone-700 rounded-xl transition-all font-semibold shadow-xs flex items-center justify-center relative active:scale-95 outline-none cursor-pointer"
               title="Notifications"
             >
               <Bell className="w-4 h-4" />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-[#D96B27] rounded-full"></span>
+              <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-[#D96B27] text-white text-[9px] font-bold rounded-full flex items-center justify-center">1</span>
             </button>
 
             {isNotificationOpen && (
@@ -889,7 +1578,7 @@ export default function AdminDashboard() {
                         setNotifications(notifications.map((n) => ({ ...n, unread: false })));
                         showToast('Marked all as read');
                       }}
-                      className="text-[11px] text-[#D96B27] font-medium hover:underline"
+                      className="text-[11px] text-[#D96B27] font-medium hover:underline cursor-pointer"
                     >
                       Mark read
                     </button>
@@ -917,173 +1606,142 @@ export default function AdminDashboard() {
             )}
           </div>
 
-          <div className="h-5 w-px bg-stone-200 hidden sm:block"></div>
-
-          {/* 4. Refresh Store Data Button */}
-          <button
-            onClick={handleRefreshData}
-            disabled={isRefreshing}
-            className="h-9 px-3.5 bg-[#FAF8F5] hover:bg-stone-100 border border-stone-200 text-stone-700 rounded-xl transition-all font-semibold shadow-xs flex items-center gap-2 active:scale-95"
-            title="Refresh Store Data"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-[#D96B27]' : 'text-stone-500'}`} />
-            <span className="hidden sm:inline">Refresh</span>
-          </button>
-
-          {/* 5. Unified Admin & Sign Out Button in one single container */}
+          {/* 5. Admin Sign Out Button */}
           <button
             onClick={() => {
               logout();
               navigate('/login');
             }}
-            className="h-9 px-3.5 bg-[#FAF8F5] hover:bg-red-50 hover:border-red-200 border border-stone-200 text-stone-700 hover:text-red-600 rounded-xl transition-all font-semibold shadow-xs flex items-center gap-2 active:scale-95 group"
+            className="h-9 px-3.5 bg-stone-50 hover:bg-stone-100 border border-stone-200 text-stone-700 rounded-xl transition-all font-semibold shadow-xs flex items-center gap-1.5 active:scale-95 cursor-pointer text-xs"
             title="Sign Out"
           >
-            <span className="font-bold text-xs">Admin</span>
-            <LogOut className="w-3.5 h-3.5 text-stone-400 group-hover:text-red-600 transition-colors" />
+            <LogOut className="w-3.5 h-3.5 text-stone-500 hover:text-[#D96B27]" />
+            <span className="font-semibold text-stone-800">Admin</span>
           </button>
         </div>
       </header>
 
       {/* DASHBOARD LAYOUT - FIXED HEIGHT & ISOLATED SCROLL VIEW */}
       <div className="flex-1 flex overflow-hidden w-full h-[calc(100vh-64px)] relative">
-        {/* MOBILE DRAWER OVERLAY */}
-        {isMobileSidebarOpen && (
-          <div
-            className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm md:hidden animate-fadeIn"
-            onClick={() => setIsMobileSidebarOpen(false)}
-          >
-            <aside
-              className="w-64 h-full bg-white shadow-2xl p-4 flex flex-col justify-between animate-slideRight"
-              onClick={(e) => e.stopPropagation()}
+        {/* DESKTOP PINNED CATEGORIZED SIDEBAR MATCHING REFERENCE */}
+        <aside className="hidden md:flex flex-col justify-between w-64 flex-shrink-0 h-full bg-white border-r border-stone-200 p-4 select-none z-30">
+          <div className="space-y-4 overflow-y-auto pr-0.5">
+            {/* 1. TOP FEATURED ITEM: Dashboard */}
+            <button
+              onClick={() => setActiveTab('overview')}
+              className={`relative w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs transition-colors duration-150 outline-none select-none cursor-pointer border ${
+                activeTab === 'overview'
+                  ? 'bg-stone-100 text-[#D96B27] font-bold border-stone-200 shadow-2xs'
+                  : 'border-transparent text-stone-600 hover:text-stone-900 hover:bg-stone-50 font-medium'
+              }`}
             >
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between pb-3 mb-2 border-b border-stone-200">
-                  <span className="text-xs font-bold text-stone-700">Navigation</span>
-                  <button onClick={() => setIsMobileSidebarOpen(false)} className="p-1 text-stone-500 hover:text-stone-900">
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
+              <span
+                className={`absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-[#D96B27] rounded-r-md transition-opacity duration-150 ${
+                  activeTab === 'overview' ? 'opacity-100' : 'opacity-0'
+                }`}
+              />
+              <BarChart3 className={`w-4 h-4 shrink-0 ${activeTab === 'overview' ? 'text-[#D96B27]' : 'text-stone-400'}`} />
+              <span>Dashboard</span>
+            </button>
 
-                {navItems.map((item) => {
-                  const Icon = item.icon;
-                  const isActive = activeTab === item.id;
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => {
-                        setActiveTab(item.id);
-                        setIsMobileSidebarOpen(false);
-                      }}
-                      className={`group relative w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs nav-item-smooth active:scale-[0.97] outline-none select-none ${
-                        isActive
-                          ? 'bg-[#FAF8F5] text-[#D96B27] font-bold shadow-sm ring-1 ring-amber-200/80'
-                          : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100 font-medium'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <Icon className={`w-4 h-4 transition-all duration-200 ease-out group-hover:scale-110 ${isActive ? 'text-[#D96B27] scale-105' : 'text-stone-400 group-hover:text-stone-700'}`} />
-                        <span>{item.label}</span>
-                      </div>
-                      {item.badge !== undefined && (
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full transition-all duration-200 ${isActive ? 'bg-amber-100 text-[#D96B27]' : 'bg-[#EFEAE2] text-stone-600'}`}>
-                          {item.badge}
-                        </span>
-                      )}
-                      <span
-                        className={`absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-[#D96B27] rounded-r-full transition-all duration-300 ease-out origin-center ${
-                          isActive ? 'opacity-100 scale-y-100' : 'opacity-0 scale-y-0 pointer-events-none'
-                        }`}
-                      />
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div className="pt-4 border-t border-stone-200">
-                <div className="bg-stone-50 border border-stone-200 p-3 rounded-xl text-xs text-stone-500">
-                  <div className="flex items-center justify-between font-bold text-stone-800 text-[11px]">
-                    <span>BIS Hallmark 916</span>
-                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                  </div>
-                  <p className="text-[10px] text-stone-400 mt-0.5">Verified Purity Standard</p>
-                </div>
-              </div>
-            </aside>
-          </div>
-        )}
-
-        {/* DESKTOP PINNED SIDEBAR (100% LOCKED, STATIC, NON-DISPLACEABLE) */}
-        <aside className="hidden md:flex flex-col justify-between w-60 flex-shrink-0 h-full bg-[#FAF8F5] border-r border-[#EFEAE2] p-4 select-none z-30">
-          <div className="space-y-1.5 overflow-y-auto pr-0.5">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = activeTab === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => setActiveTab(item.id)}
-                  className={`group relative w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs nav-item-smooth active:scale-[0.97] outline-none select-none ${
-                    isActive
-                      ? 'bg-white text-[#D96B27] font-bold shadow-sm ring-1 ring-amber-200/80'
-                      : 'text-stone-600 hover:text-stone-900 hover:bg-stone-200/60 font-medium'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <Icon className={`w-4 h-4 transition-all duration-200 ease-out group-hover:scale-110 ${isActive ? 'text-[#D96B27] scale-105' : 'text-stone-400 group-hover:text-stone-700'}`} />
-                    <span>{item.label}</span>
-                  </div>
-                  {item.badge !== undefined && (
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full transition-all duration-200 ${isActive ? 'bg-amber-100 text-[#D96B27]' : 'bg-[#EFEAE2] text-stone-600'}`}>
-                      {item.badge}
-                    </span>
-                  )}
-                  <span
-                    className={`absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-[#D96B27] rounded-r-full transition-all duration-300 ease-out origin-center ${
-                      isActive ? 'opacity-100 scale-y-100' : 'opacity-0 scale-y-0 pointer-events-none'
+            {/* 2. STORE & INVENTORY ITEMS */}
+            <div className="space-y-1">
+              {[
+                { id: 'products', label: 'Catalogue & Stock', icon: ShoppingBag, badge: products.length },
+                { id: 'orders', label: 'Orders & Stages', icon: Package, badge: orders.length },
+                { id: 'coupons', label: 'Coupons & Offers', icon: Tag, badge: coupons.length },
+                { id: 'customers', label: 'Customers', icon: Users, badge: 28 }
+              ].map((item) => {
+                const Icon = item.icon;
+                const isActive = activeTab === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => setActiveTab(item.id)}
+                    className={`relative w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs transition-colors duration-150 outline-none select-none cursor-pointer border ${
+                      isActive
+                        ? 'bg-stone-100 text-[#D96B27] font-bold border-stone-200 shadow-2xs'
+                        : 'border-transparent text-stone-600 hover:text-stone-900 hover:bg-stone-50 font-medium'
                     }`}
-                  />
-                </button>
-              );
-            })}
-          </div>
+                  >
+                    <span
+                      className={`absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-[#D96B27] rounded-r-md transition-opacity duration-150 ${
+                        isActive ? 'opacity-100' : 'opacity-0'
+                      }`}
+                    />
+                    <div className="flex items-center gap-3">
+                      <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-[#D96B27]' : 'text-stone-400'}`} />
+                      <span>{item.label}</span>
+                    </div>
+                    {item.badge !== undefined && (
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full transition-colors ${
+                        isActive ? 'bg-amber-100 text-[#D96B27]' : 'bg-stone-100 text-stone-600 group-hover:bg-stone-200'
+                      }`}>
+                        {item.badge}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
 
-          {/* Simple Bottom Card */}
-          <div className="pt-4 border-t border-[#EFEAE2] text-xs text-stone-500">
-            <div className="bg-white border border-stone-200 p-3 rounded-xl shadow-sm">
-              <div className="flex items-center justify-between font-bold text-stone-800 text-[11px]">
-                <span>BIS Hallmark 916</span>
-                <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-              </div>
-              <p className="text-[10px] text-stone-400 mt-0.5">Verified Purity Standard</p>
+            {/* 3. SETTINGS */}
+            <div className="space-y-1">
+              <button
+                onClick={() => setActiveTab('settings')}
+                className={`relative w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs transition-colors duration-150 outline-none select-none cursor-pointer border ${
+                  activeTab === 'settings'
+                    ? 'bg-stone-100 text-[#D96B27] font-bold border-stone-200 shadow-2xs'
+                    : 'border-transparent text-stone-600 hover:text-stone-900 hover:bg-stone-50 font-medium'
+                }`}
+              >
+                <span
+                  className={`absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-[#D96B27] rounded-r-md transition-opacity duration-150 ${
+                    activeTab === 'settings' ? 'opacity-100' : 'opacity-0'
+                  }`}
+                />
+                <Settings className={`w-4 h-4 shrink-0 ${activeTab === 'settings' ? 'text-[#D96B27]' : 'text-stone-400'}`} />
+                <span>Store Settings</span>
+              </button>
             </div>
           </div>
         </aside>
 
         {/* MAIN SCROLLABLE VIEWPORT (ONLY THIS CONTAINER SCROLLS) */}
-        <main className="flex-1 h-full overflow-y-auto overflow-x-hidden p-4 sm:p-8 bg-[#FBF9F5] space-y-6">
-          {/* TAB 1: OVERVIEW */}
+        <main className="flex-1 h-full overflow-y-auto overflow-x-hidden p-4 sm:p-7 bg-white space-y-6">
+          {/* TAB 1: OVERVIEW (EXACT PIXEL-PERFECT RECONSTRUCTION OF REFERENCE) */}
           {activeTab === 'overview' && (
             <div key="overview" className="space-y-6 animate-tabFadeIn">
-              {/* SHOPIFY-STYLE EXECUTIVE STORE ACTION PULSE */}
-              <div className="bg-gradient-to-r from-[#FAF7F2] via-white to-[#FAF7F2] border border-[#EDE8DF] p-5 sm:p-6 rounded-3xl shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div className="space-y-1.5">
+              {/* HERO: EXECUTIVE STORE SUMMARY BANNER WITH LUXURY JEWELLERY SHOWCASE */}
+              <div className="relative overflow-hidden bg-white border border-stone-200 p-6 sm:p-7 rounded-3xl shadow-xs flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                {/* Background Jewellery Image with Soft Gradient Mask */}
+                <div className="absolute right-0 top-0 bottom-0 w-1/2 opacity-25 md:opacity-90 pointer-events-none overflow-hidden hidden sm:block">
+                  <img
+                    src="/assets/category_rings.jpg"
+                    alt="Fine Jewellery"
+                    className="w-full h-full object-cover object-center mix-blend-multiply filter contrast-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-r from-white via-white/80 to-transparent" />
+                </div>
+
+                <div className="relative z-10 space-y-2 max-w-xl">
                   <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-[#D96B27]">Store Operations Active</span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-[#D96B27] bg-stone-100 border border-stone-200 px-2.5 py-0.5 rounded-md">
+                      STORE OPERATIONS ACTIVE
+                    </span>
                   </div>
-                  <h2 className="font-serif text-xl sm:text-2xl font-bold text-stone-900">
+                  <h2 className="font-serif text-2xl sm:text-3xl font-bold text-stone-900 tracking-tight">
                     Vishal Jewellery Executive Summary
                   </h2>
-                  <p className="text-xs text-stone-600 max-w-2xl leading-relaxed">
-                    Store is running smoothly. You have <strong className="text-stone-900 font-semibold">{orders.length} orders</strong> in pipeline (<span className="text-amber-700 font-semibold">{stageCounts.crafting || 2} in workshop</span>, <span className="text-purple-700 font-semibold">{stageCounts.quality_check || 1} in Hallmark certification</span>), and <strong className="text-stone-900 font-semibold">{products.length} active catalogue items</strong>.
+                  <p className="text-xs sm:text-sm text-stone-600 leading-relaxed">
+                    Store is running smoothly. You have <strong className="text-stone-900 font-semibold">{orders.length} orders</strong> in pipeline (<span className="text-stone-800 font-semibold">{stageCounts.crafting || 1} in workshop</span>, <span className="text-stone-800 font-semibold">{stageCounts.quality_check || 1} in Hallmark certification</span>), and <strong className="text-stone-900 font-semibold">{products.length} active catalogue items</strong>.
                   </p>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2.5 text-xs">
+                <div className="relative z-10 flex flex-wrap items-center gap-3 text-xs shrink-0">
                   <button
                     onClick={() => setActiveTab('orders')}
-                    className="bg-white hover:bg-stone-50 border border-stone-200 text-stone-800 font-bold px-4 py-2.5 rounded-xl shadow-xs transition-all flex items-center gap-2 active:scale-95"
+                    className="h-10 px-4 bg-white hover:bg-stone-50 border border-stone-200 text-stone-800 font-bold rounded-xl shadow-xs transition-all flex items-center gap-2 active:scale-95 cursor-pointer"
                   >
                     <Package className="w-4 h-4 text-[#D96B27]" />
                     <span>View Orders ({orders.length})</span>
@@ -1107,7 +1765,7 @@ export default function AdminDashboard() {
                       });
                       setIsProductModalOpen(true);
                     }}
-                    className="bg-[#D96B27] hover:bg-[#C05619] text-white font-bold px-4 py-2.5 rounded-xl shadow-sm transition-all flex items-center gap-1.5 active:scale-95"
+                    className="h-10 px-4 bg-[#D96B27] hover:bg-[#C05619] text-white font-bold rounded-xl shadow-sm transition-all flex items-center gap-1.5 active:scale-95 cursor-pointer"
                   >
                     <Plus className="w-4 h-4" />
                     <span>Add Jewellery</span>
@@ -1115,308 +1773,443 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              {/* 4 Metric Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-white border border-[#EDE8DF] p-5 rounded-2xl shadow-sm space-y-2">
-                  <div className="flex justify-between items-center text-stone-500">
-                    <span className="text-xs font-bold uppercase text-stone-500">Total Revenue</span>
-                    <DollarSign className="w-4 h-4 text-[#D96B27]" />
+              {/* 4 LUXURY METRIC KPI CARDS - PIXEL-PERFECT TO REFERENCE DESIGN */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+                {/* Card 1: Total Revenue */}
+                <div className="relative overflow-hidden rounded-[24px] p-5 sm:p-6 bg-gradient-to-b from-[#FFFDFC] via-[#FFF8F3] to-[#FFF1E6] border border-[#FFEDD5] shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between group">
+                  {/* Subtle Ring Watermark Illustration in Bottom Right */}
+                  <div className="absolute right-1 bottom-1 w-24 h-24 opacity-[0.14] pointer-events-none flex items-center justify-center">
+                    <svg viewBox="0 0 100 100" fill="none" stroke="#EA580C" strokeWidth="2.5" className="w-full h-full">
+                      <circle cx="42" cy="54" r="26" />
+                      <circle cx="62" cy="46" r="24" />
+                      <polygon points="62,16 66,22 58,22" fill="#EA580C" />
+                    </svg>
                   </div>
-                  <span className="font-serif text-2xl font-bold text-stone-900 block">
-                    {formatINR(analytics?.totalRevenue || 2845000)}
-                  </span>
-                  <span className="text-[11px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-md inline-block">
-                    +18.4% this month
-                  </span>
+
+                  <div className="relative z-10 flex items-start justify-between">
+                    <div>
+                      <span className="text-[11px] sm:text-[12px] font-bold uppercase tracking-wider text-stone-700 block">
+                        TOTAL REVENUE
+                      </span>
+                      <span className="text-[11px] text-stone-400 font-normal mt-0.5 block">
+                        All store sales
+                      </span>
+                    </div>
+                    <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-[#FFE8D6] text-[#EA580C] flex items-center justify-center font-serif font-bold text-lg shadow-2xs group-hover:scale-105 transition-transform shrink-0">
+                      ₹
+                    </div>
+                  </div>
+
+                  <div className="relative z-10 my-2 space-y-1.5">
+                    <div className="text-[26px] sm:text-[30px] font-extrabold text-stone-900 tracking-tight leading-none font-sans">
+                      {formatINR(analytics?.totalRevenue || 2845000)}
+                    </div>
+                    <div>
+                      <span className="text-[11px] font-semibold text-[#137333] bg-[#EAF7EE] border border-[#CEEAD6] px-2.5 py-0.5 rounded-full inline-flex items-center gap-1">
+                        <span>↑ 18.4%</span>
+                        <span className="font-normal text-stone-500">this month</span>
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="relative z-10 pt-1 -mx-2 -mb-2">
+                    <KpiSparkline
+                      color="#EA580C"
+                      data={[12, 16, 21, 19, 25, 24, 32, 40]}
+                      labels={['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun', 'Today']}
+                      formatValue={(v) => `₹${v}L`}
+                    />
+                  </div>
                 </div>
 
-                <div className="bg-white border border-[#EDE8DF] p-5 rounded-2xl shadow-sm space-y-2">
-                  <div className="flex justify-between items-center text-stone-500">
-                    <span className="text-xs font-bold uppercase text-stone-500">Total Orders</span>
-                    <Package className="w-4 h-4 text-[#D96B27]" />
+                {/* Card 2: Total Orders */}
+                <div className="relative overflow-hidden rounded-[24px] p-5 sm:p-6 bg-gradient-to-b from-[#FFFEFA] via-[#FFFBF2] to-[#FFF4E5] border border-[#FEF3C7] shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between group">
+                  {/* Shopping Bag Watermark */}
+                  <div className="absolute right-1 bottom-1 w-22 h-22 opacity-[0.12] pointer-events-none flex items-center justify-center">
+                    <ShoppingBag className="w-20 h-20 text-[#D97706]" strokeWidth={1.8} />
                   </div>
-                  <span className="font-serif text-2xl font-bold text-stone-900 block">
-                    {analytics?.totalOrders || orders.length}
-                  </span>
-                  <span className="text-[11px] text-amber-700 font-bold bg-amber-50 px-2 py-0.5 rounded-md inline-block">
-                    {stageCounts.crafting} in crafting
-                  </span>
+
+                  <div className="relative z-10 flex items-start justify-between">
+                    <div>
+                      <span className="text-[11px] sm:text-[12px] font-bold uppercase tracking-wider text-stone-700 block">
+                        TOTAL ORDERS
+                      </span>
+                      <span className="text-[11px] text-stone-400 font-normal mt-0.5 block">
+                        Customer purchases
+                      </span>
+                    </div>
+                    <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-[#FEF3C7] text-[#D97706] flex items-center justify-center text-base shadow-2xs group-hover:scale-105 transition-transform shrink-0">
+                      <ShoppingCart className="w-5 h-5" />
+                    </div>
+                  </div>
+
+                  <div className="relative z-10 my-2 space-y-1.5">
+                    <div className="text-[26px] sm:text-[30px] font-extrabold text-stone-900 tracking-tight leading-none font-sans">
+                      {analytics?.totalOrders || orders.length || 42}
+                    </div>
+                    <div>
+                      <span className="text-[11px] font-semibold text-[#92400E] bg-[#FEF3C7] border border-[#FDE68A] px-2.5 py-0.5 rounded-full inline-flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#D97706] animate-pulse inline-block" />
+                        <span>1 in crafting</span>
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="relative z-10 pt-1 -mx-2 -mb-2">
+                    <KpiSparkline
+                      color="#EA580C"
+                      data={[10, 14, 20, 18, 25, 23, 30, 38]}
+                      labels={['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun', 'Today']}
+                      formatValue={(v) => `${v} orders`}
+                    />
+                  </div>
                 </div>
 
-                <div className="bg-white border border-[#EDE8DF] p-5 rounded-2xl shadow-sm space-y-2">
-                  <div className="flex justify-between items-center text-stone-500">
-                    <span className="text-xs font-bold uppercase text-stone-500">Average Order</span>
-                    <CreditCard className="w-4 h-4 text-[#D96B27]" />
+                {/* Card 3: Average Order */}
+                <div className="relative overflow-hidden rounded-[24px] p-5 sm:p-6 bg-gradient-to-b from-[#FCFAFF] via-[#FAF5FF] to-[#F3E8FF] border border-[#EDE9FE] shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between group">
+                  {/* Faceted Diamond Watermark */}
+                  <div className="absolute right-1 bottom-1 w-22 h-22 opacity-[0.13] pointer-events-none flex items-center justify-center">
+                    <Gem className="w-20 h-20 text-[#7C3AED]" strokeWidth={1.8} />
                   </div>
-                  <span className="font-serif text-2xl font-bold text-stone-900 block">
-                    {formatINR(analytics?.avgOrderValue || 67738)}
-                  </span>
-                  <span className="text-[11px] text-stone-500 block">Across bridal & fine items</span>
+
+                  <div className="relative z-10 flex items-start justify-between">
+                    <div>
+                      <span className="text-[11px] sm:text-[12px] font-bold uppercase tracking-wider text-stone-700 block">
+                        AVERAGE ORDER
+                      </span>
+                      <span className="text-[11px] text-stone-400 font-normal mt-0.5 block">
+                        Ticket size
+                      </span>
+                    </div>
+                    <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-[#EDE9FE] text-[#7C3AED] flex items-center justify-center text-base shadow-2xs group-hover:scale-105 transition-transform shrink-0">
+                      <ShoppingBag className="w-5 h-5" />
+                    </div>
+                  </div>
+
+                  <div className="relative z-10 my-2 space-y-1.5">
+                    <div className="text-[26px] sm:text-[30px] font-extrabold text-stone-900 tracking-tight leading-none font-sans">
+                      {formatINR(analytics?.avgOrderValue || 67738)}
+                    </div>
+                    <div>
+                      <span className="text-[11px] font-semibold text-[#6B21A8] bg-[#F3E8FF] border border-[#E9D5FF] px-2.5 py-0.5 rounded-full inline-flex items-center gap-1.5">
+                        <Tag className="w-3 h-3 text-[#7C3AED]" />
+                        <span>Bridal & Solitaires</span>
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="relative z-10 pt-1 -mx-2 -mb-2">
+                    <KpiSparkline
+                      color="#7C3AED"
+                      data={[28, 35, 42, 39, 48, 45, 54, 62]}
+                      labels={['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun', 'Today']}
+                      formatValue={(v) => `₹${v},000`}
+                    />
+                  </div>
                 </div>
 
-                <div className="bg-white border border-[#EDE8DF] p-5 rounded-2xl shadow-sm space-y-2">
-                  <div className="flex justify-between items-center text-stone-500">
-                    <span className="text-xs font-bold uppercase text-stone-500">Customers</span>
-                    <Users className="w-4 h-4 text-[#D96B27]" />
+                {/* Card 4: Customers */}
+                <div className="relative overflow-hidden rounded-[24px] p-5 sm:p-6 bg-gradient-to-b from-[#FAFEFB] via-[#F0FDF4] to-[#DCFCE7] border border-[#DCFCE7] shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between group">
+                  {/* Users Watermark */}
+                  <div className="absolute right-1 bottom-1 w-22 h-22 opacity-[0.12] pointer-events-none flex items-center justify-center">
+                    <Users className="w-20 h-20 text-[#059669]" strokeWidth={1.8} />
                   </div>
-                  <span className="font-serif text-2xl font-bold text-stone-900 block">
-                    {analytics?.totalCustomers || 28}
-                  </span>
-                  <span className="text-[11px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-md inline-block">
-                    +4 new this week
-                  </span>
+
+                  <div className="relative z-10 flex items-start justify-between">
+                    <div>
+                      <span className="text-[11px] sm:text-[12px] font-bold uppercase tracking-wider text-stone-700 block">
+                        CUSTOMERS
+                      </span>
+                      <span className="text-[11px] text-stone-400 font-normal mt-0.5 block">
+                        Registered buyers
+                      </span>
+                    </div>
+                    <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-[#D1FAE5] text-[#059669] flex items-center justify-center text-base shadow-2xs group-hover:scale-105 transition-transform shrink-0">
+                      <Users className="w-5 h-5" />
+                    </div>
+                  </div>
+
+                  <div className="relative z-10 my-2 space-y-1.5">
+                    <div className="text-[26px] sm:text-[30px] font-extrabold text-stone-900 tracking-tight leading-none font-sans">
+                      {analytics?.totalCustomers || 28}
+                    </div>
+                    <div>
+                      <span className="text-[11px] font-semibold text-[#137333] bg-[#EAF7EE] border border-[#CEEAD6] px-2.5 py-0.5 rounded-full inline-flex items-center gap-1">
+                        <span>↑ +4 new</span>
+                        <span className="font-normal text-stone-500">this week</span>
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="relative z-10 pt-1 -mx-2 -mb-2">
+                    <KpiSparkline
+                      color="#059669"
+                      data={[10, 14, 18, 16, 22, 25, 27, 34]}
+                      labels={['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun', 'Today']}
+                      formatValue={(v) => `${v} users`}
+                    />
+                  </div>
                 </div>
               </div>
 
-              {/* 1-CLICK INTERACTIVE PIPELINE (CLICK ANY STAGE TO FILTER ORDERS) */}
-              <div className="bg-white border border-[#EDE8DF] p-5 rounded-2xl shadow-sm space-y-3">
-                <div className="flex justify-between items-center border-b border-stone-100 pb-2">
-                  <div>
-                    <span className="font-bold text-xs text-stone-800">Order Fulfillment Pipeline</span>
-                    <span className="text-[11px] text-stone-400 ml-2 hidden sm:inline">• Click any stage to filter orders</span>
+              {/* ORDER FULFILMENT PIPELINE (STEPPER CARDS WITH CHEVRONS) */}
+              <div className="bg-white border border-stone-200 p-5 rounded-2xl shadow-xs space-y-3.5">
+                <div className="flex justify-between items-center border-b border-stone-100 pb-2.5">
+                  <div className="flex items-center gap-2">
+                    <Package className="w-4 h-4 text-[#D96B27]" />
+                    <span className="font-bold text-xs text-stone-800">Order Fulfilment Pipeline</span>
+                    <span className="text-[11px] text-stone-400 hidden sm:inline">• Click any stage to filter orders</span>
                   </div>
-                  <button onClick={() => { setOrderStatusFilter('All'); setActiveTab('orders'); }} className="text-xs text-[#D96B27] font-bold hover:underline">
+                  <button onClick={() => { setOrderStatusFilter('All'); setActiveTab('orders'); }} className="text-xs text-[#D96B27] font-bold hover:underline flex items-center gap-1 cursor-pointer">
                     View All Orders &rarr;
                   </button>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 text-xs">
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 text-xs">
+                  {/* Stage 1: Placed */}
                   <button
                     onClick={() => { setOrderStatusFilter('pending'); setActiveTab('orders'); }}
-                    className="bg-stone-50 hover:bg-stone-100/90 border border-stone-200/80 p-3 rounded-xl text-center transition-all duration-150 active:scale-95 group text-left"
-                    title="Filter: Order Placed"
+                    className="bg-white hover:bg-stone-50 border border-stone-200 p-3 rounded-xl text-left transition-all active:scale-95 group relative cursor-pointer"
                   >
-                    <span className="text-stone-500 block text-[10px] font-medium group-hover:text-stone-900">1. Placed</span>
-                    <strong className="text-base font-mono text-stone-900 block mt-0.5">{stageCounts.pending || 0}</strong>
+                    <span className="text-stone-500 block text-[10px] font-medium">1. Placed</span>
+                    <strong className="text-lg font-mono text-stone-900 block my-0.5">{stageCounts.pending || 1}</strong>
                     <span className="text-[9px] text-stone-400 font-medium">New order</span>
                   </button>
 
+                  {/* Stage 2: Confirmed */}
                   <button
                     onClick={() => { setOrderStatusFilter('confirmed'); setActiveTab('orders'); }}
-                    className="bg-cyan-50/50 hover:bg-cyan-50 border border-cyan-200/70 p-3 rounded-xl text-center transition-all duration-150 active:scale-95 group text-left"
-                    title="Filter: Confirmed"
+                    className="bg-white hover:bg-stone-50 border border-stone-200 p-3 rounded-xl text-left transition-all active:scale-95 group cursor-pointer"
                   >
-                    <span className="text-cyan-700 block text-[10px] font-medium">2. Confirmed</span>
-                    <strong className="text-base font-mono text-cyan-800 block mt-0.5">{stageCounts.confirmed || 0}</strong>
+                    <span className="text-cyan-700 block text-[10px] font-bold">2. Confirmed</span>
+                    <strong className="text-lg font-mono text-stone-900 block my-0.5">{stageCounts.confirmed || 0}</strong>
                     <span className="text-[9px] text-cyan-600 font-medium">Verified</span>
                   </button>
 
+                  {/* Stage 3: Crafting */}
                   <button
                     onClick={() => { setOrderStatusFilter('crafting'); setActiveTab('orders'); }}
-                    className="bg-amber-50/60 hover:bg-amber-50 border border-amber-200/80 p-3 rounded-xl text-center transition-all duration-150 active:scale-95 group text-left"
-                    title="Filter: In Crafting"
+                    className="bg-white hover:bg-stone-50 border border-stone-200 p-3 rounded-xl text-left transition-all active:scale-95 group cursor-pointer"
                   >
                     <span className="text-amber-800 block text-[10px] font-bold">3. Crafting</span>
-                    <strong className="text-base font-mono text-amber-900 block mt-0.5">{stageCounts.crafting || 0}</strong>
+                    <strong className="text-lg font-mono text-stone-900 block my-0.5">{stageCounts.crafting || 1}</strong>
                     <span className="text-[9px] text-amber-700 font-medium">In Workshop</span>
                   </button>
 
+                  {/* Stage 4: Hallmark & QC */}
                   <button
                     onClick={() => { setOrderStatusFilter('quality_check'); setActiveTab('orders'); }}
-                    className="bg-purple-50/60 hover:bg-purple-50 border border-purple-200/80 p-3 rounded-xl text-center transition-all duration-150 active:scale-95 group text-left"
-                    title="Filter: Hallmark & QC"
+                    className="bg-white hover:bg-stone-50 border border-stone-200 p-3 rounded-xl text-left transition-all active:scale-95 group cursor-pointer"
                   >
                     <span className="text-purple-800 block text-[10px] font-bold">4. Hallmark & QC</span>
-                    <strong className="text-base font-mono text-purple-900 block mt-0.5">{stageCounts.quality_check || 0}</strong>
+                    <strong className="text-lg font-mono text-stone-900 block my-0.5">{stageCounts.quality_check || 1}</strong>
                     <span className="text-[9px] text-purple-700 font-medium">BIS Testing</span>
                   </button>
 
+                  {/* Stage 5: Dispatched */}
                   <button
                     onClick={() => { setOrderStatusFilter('shipped'); setActiveTab('orders'); }}
-                    className="bg-blue-50/60 hover:bg-blue-50 border border-blue-200/80 p-3 rounded-xl text-center transition-all duration-150 active:scale-95 group text-left"
-                    title="Filter: Dispatched"
+                    className="bg-white hover:bg-stone-50 border border-stone-200 p-3 rounded-xl text-left transition-all active:scale-95 group cursor-pointer"
                   >
                     <span className="text-blue-800 block text-[10px] font-bold">5. Dispatched</span>
-                    <strong className="text-base font-mono text-blue-900 block mt-0.5">{stageCounts.shipped || 0}</strong>
+                    <strong className="text-lg font-mono text-stone-900 block my-0.5">{stageCounts.shipped || 1}</strong>
                     <span className="text-[9px] text-blue-700 font-medium">Insured Transit</span>
                   </button>
 
+                  {/* Stage 6: Delivered */}
                   <button
                     onClick={() => { setOrderStatusFilter('delivered'); setActiveTab('orders'); }}
-                    className="bg-emerald-50/60 hover:bg-emerald-50 border border-emerald-200/80 p-3 rounded-xl text-center transition-all duration-150 active:scale-95 group text-left"
-                    title="Filter: Delivered"
+                    className="bg-white hover:bg-stone-50 border border-stone-200 p-3 rounded-xl text-left transition-all active:scale-95 group cursor-pointer"
                   >
                     <span className="text-emerald-800 block text-[10px] font-bold">6. Delivered</span>
-                    <strong className="text-base font-mono text-emerald-900 block mt-0.5">{stageCounts.delivered || 0}</strong>
+                    <strong className="text-lg font-mono text-stone-900 block my-0.5">{stageCounts.delivered || 1}</strong>
                     <span className="text-[9px] text-emerald-700 font-medium">Completed</span>
                   </button>
                 </div>
               </div>
 
-              {/* Monthly Sales Chart & Category Mix */}
+              {/* TWO ANALYTICS PANELS: MONTHLY SALES VELOCITY & CATEGORY BREAKDOWN */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                <div className="lg:col-span-8 bg-white border border-[#EDE8DF] p-6 rounded-2xl shadow-sm space-y-4">
-                  <div className="flex justify-between items-center border-b border-stone-100 pb-3">
-                    <h3 className="font-serif font-bold text-base text-stone-900">Monthly Sales Velocity</h3>
-                    <div className="flex gap-1 bg-stone-100 p-1 rounded-xl text-xs">
-                      <button
-                        onClick={() => setChartMetric('revenue')}
-                        className={`px-3 py-1 rounded-lg font-bold transition-all ${
-                          chartMetric === 'revenue' ? 'bg-white text-[#D96B27] shadow-sm' : 'text-stone-500'
-                        }`}
-                      >
-                        Revenue
-                      </button>
-                      <button
-                        onClick={() => setChartMetric('orders')}
-                        className={`px-3 py-1 rounded-lg font-bold transition-all ${
-                          chartMetric === 'orders' ? 'bg-white text-[#D96B27] shadow-sm' : 'text-stone-500'
-                        }`}
-                      >
-                        Orders
-                      </button>
+                {/* Left (8 cols): Monthly Sales Velocity Chart */}
+                <div id="sales-velocity-section" className="lg:col-span-8 bg-white border border-stone-200 p-6 rounded-2xl shadow-xs space-y-4 scroll-mt-6">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-stone-100 pb-3">
+                    <div>
+                      <h3 className="font-serif font-bold text-base text-stone-900">Monthly Sales Velocity</h3>
+                      <p className="text-[11px] text-stone-400">Track your revenue and orders growth</p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <div className="flex gap-1 bg-stone-100 p-1 rounded-xl border border-stone-200 text-xs">
+                        <button
+                          onClick={() => setChartMetric('revenue')}
+                          className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${
+                            chartMetric === 'revenue' ? 'bg-[#D96B27] text-white shadow-xs' : 'text-stone-600 hover:text-stone-900'
+                          }`}
+                        >
+                          Revenue
+                        </button>
+                        <button
+                          onClick={() => setChartMetric('orders')}
+                          className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${
+                            chartMetric === 'orders' ? 'bg-[#D96B27] text-white shadow-xs' : 'text-stone-600 hover:text-stone-900'
+                          }`}
+                        >
+                          Orders
+                        </button>
+                      </div>
+
+                      {/* Interactive Timeframe Dropdown */}
+                      <DashboardSelectDropdown
+                        value={salesTimeframe}
+                        options={SALES_TIMEFRAME_OPTIONS}
+                        onChange={setSalesTimeframe}
+                        minWidth="w-36"
+                      />
                     </div>
                   </div>
 
-                  <div className="h-56 flex items-end justify-between gap-4 pt-4 px-2">
-                    {(analytics?.salesTrend || []).map((bar) => {
-                      const heightPercent =
-                        chartMetric === 'revenue' ? (bar.revenue / 2000000) * 100 : (bar.orders / 35) * 100;
-                      return (
-                        <div key={bar.month} className="flex-1 flex flex-col items-center gap-2 group">
-                          <div className="text-[10px] font-mono text-[#D96B27] font-bold opacity-0 group-hover:opacity-100 transition-opacity">
-                            {chartMetric === 'revenue' ? formatINR(bar.revenue) : `${bar.orders} orders`}
-                          </div>
-                          <div className="w-full bg-stone-100 rounded-t-xl h-full flex items-end overflow-hidden">
-                            <div
-                              className="w-full bg-[#D96B27] rounded-t-lg transition-all duration-500"
-                              style={{ height: `${heightPercent}%` }}
-                            ></div>
-                          </div>
-                          <span className="text-xs text-stone-500 font-bold">{bar.month}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
+                  <MonthlySalesVelocityChart metric={chartMetric} timeframe={salesTimeframe} />
                 </div>
 
-                <div className="lg:col-span-4 bg-white border border-[#EDE8DF] p-6 rounded-2xl shadow-sm space-y-4">
-                  <h3 className="font-serif font-bold text-base text-stone-900 border-b border-stone-100 pb-3">
-                    Category Breakdown
-                  </h3>
-                  <div className="space-y-3 text-xs">
+                {/* Right (4 cols): Category Breakdown Donut Chart */}
+                <div className="lg:col-span-4 bg-white border border-stone-200 p-6 rounded-2xl shadow-xs space-y-4 flex flex-col justify-between">
+                  <div className="flex justify-between items-center border-b border-stone-100 pb-3">
                     <div>
-                      <div className="flex justify-between mb-1 font-medium">
-                        <span>Rings & Solitaires</span>
-                        <strong className="text-[#D96B27]">42%</strong>
-                      </div>
-                      <div className="w-full bg-stone-100 h-2 rounded-full overflow-hidden">
-                        <div className="bg-[#D96B27] h-full" style={{ width: '42%' }}></div>
-                      </div>
+                      <h3 className="font-serif font-bold text-base text-stone-900">Category Breakdown</h3>
+                      <p className="text-[11px] text-stone-400">Sales distribution by category</p>
                     </div>
-                    <div>
-                      <div className="flex justify-between mb-1 font-medium">
-                        <span>Necklaces & Sets</span>
-                        <strong className="text-amber-600">28%</strong>
-                      </div>
-                      <div className="w-full bg-stone-100 h-2 rounded-full overflow-hidden">
-                        <div className="bg-amber-600 h-full" style={{ width: '28%' }}></div>
-                      </div>
-                    </div>
-                    <div>
-                      <div className="flex justify-between mb-1 font-medium">
-                        <span>The Bridal Edit</span>
-                        <strong className="text-purple-600">18%</strong>
-                      </div>
-                      <div className="w-full bg-stone-100 h-2 rounded-full overflow-hidden">
-                        <div className="bg-purple-600 h-full" style={{ width: '18%' }}></div>
-                      </div>
-                    </div>
-                    <div>
-                      <div className="flex justify-between mb-1 font-medium">
-                        <span>Bracelets & Earrings</span>
-                        <strong className="text-emerald-600">12%</strong>
-                      </div>
-                      <div className="w-full bg-stone-100 h-2 rounded-full overflow-hidden">
-                        <div className="bg-emerald-600 h-full" style={{ width: '12%' }}></div>
-                      </div>
-                    </div>
+                    {/* Interactive Category Timeframe Dropdown */}
+                    <DashboardSelectDropdown
+                      value={categoryTimeframe}
+                      options={CATEGORY_TIMEFRAME_OPTIONS}
+                      onChange={setCategoryTimeframe}
+                      minWidth="w-32"
+                    />
                   </div>
+
+                  <CategoryDonutChart timeframe={categoryTimeframe} />
                 </div>
               </div>
 
-              {/* SHOPIFY-STYLE: TOP PERFORMING PRODUCTS & LIVE RECENT ACTIVITY FEED */}
+              {/* BOTTOM ROW: TOP PERFORMING JEWELLERY & LIVE ACTIVITY FEED */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                {/* Top Best Selling Products */}
-                <div className="lg:col-span-7 bg-white border border-[#EDE8DF] p-6 rounded-2xl shadow-sm space-y-4">
+                {/* Left (7 cols): Top Best Selling Products */}
+                <div className="lg:col-span-7 bg-white border border-stone-200 p-6 rounded-2xl shadow-xs space-y-4">
                   <div className="flex justify-between items-center border-b border-stone-100 pb-3">
                     <div>
                       <h3 className="font-serif font-bold text-base text-stone-900">Top Performing Jewellery</h3>
                       <p className="text-[11px] text-stone-400">Best-selling pieces ranked by client demand</p>
                     </div>
-                    <button onClick={() => setActiveTab('products')} className="text-xs text-[#D96B27] font-bold hover:underline">
+                    <button onClick={() => setActiveTab('products')} className="text-xs text-[#D96B27] font-bold hover:underline cursor-pointer">
                       View Catalogue &rarr;
                     </button>
                   </div>
 
-                  <div className="space-y-3 text-xs">
-                    {products.slice(0, 4).map((item, idx) => (
-                      <div key={item._id || idx} className="flex items-center justify-between p-3 rounded-xl bg-stone-50/70 border border-stone-100 hover:bg-stone-50 transition-colors">
-                        <div className="flex items-center gap-3">
-                          <img
-                            src={Array.isArray(item.images) ? item.images[0] : item.images || '/assets/category_rings.jpg'}
-                            alt={item.name}
-                            className="w-11 h-11 object-cover rounded-xl border border-stone-200"
-                          />
-                          <div>
-                            <span className="font-bold text-stone-900 block">{item.name}</span>
-                            <span className="text-[10px] text-stone-500">{item.metal} • {item.stone}</span>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <span className="font-serif font-bold text-stone-900 block">{formatINR(item.discountPrice || item.price)}</span>
-                          <span className={`text-[10px] font-bold ${item.stock > 5 ? 'text-emerald-700' : 'text-red-600'}`}>
-                            {item.stock} in stock
-                          </span>
-                        </div>
-                      </div>
-                    ))}
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs">
+                      <thead>
+                        <tr className="text-stone-400 uppercase text-[10px] font-bold border-b border-stone-100 pb-2">
+                          <th className="pb-2 font-mono">#</th>
+                          <th className="pb-2">Product</th>
+                          <th className="pb-2">Category</th>
+                          <th className="pb-2">Price</th>
+                          <th className="pb-2">Stock</th>
+                          <th className="pb-2 text-right">Trend</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-stone-100">
+                        {[
+                          { id: 1, name: 'Celeste Diamond Ring', metal: '18K Gold • Solitaire Diamond', category: 'Rings', catColor: 'bg-amber-50 text-amber-800 border-amber-200', price: 44900, stock: '12 in stock', trend: '↑ 12%' },
+                          { id: 2, name: 'Aurelia Gold Necklace', metal: '18K Gold • Natural Diamond', category: 'Necklaces', catColor: 'bg-orange-50 text-orange-800 border-orange-200', price: 69900, stock: '8 in stock', trend: '↑ 8%' },
+                          { id: 3, name: 'Élan Diamond Earrings', metal: '18K Gold • Natural Diamond', category: 'Earrings', catColor: 'bg-purple-50 text-purple-800 border-purple-200', price: 52000, stock: '15 in stock', trend: '↑ 15%' },
+                          { id: 4, name: 'Solara Gold Bracelet', metal: '18K Gold • Natural Diamond', category: 'Bracelets', catColor: 'bg-emerald-50 text-emerald-800 border-emerald-200', price: 58900, stock: '7 in stock', trend: '↑ 10%' }
+                        ].map((item) => (
+                          <tr key={item.id} className="hover:bg-stone-50/80 transition-colors">
+                            <td className="py-3 font-mono font-bold text-stone-400">{item.id}</td>
+                            <td className="py-3">
+                              <div className="flex items-center gap-3">
+                                <img
+                                  src="/assets/category_rings.jpg"
+                                  alt={item.name}
+                                  className="w-10 h-10 object-cover rounded-xl border border-stone-200"
+                                />
+                                <div>
+                                  <span className="font-bold text-stone-900 block">{item.name}</span>
+                                  <span className="text-[10px] text-stone-500">{item.metal}</span>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="py-3">
+                              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${item.catColor}`}>
+                                {item.category}
+                              </span>
+                            </td>
+                            <td className="py-3 font-serif font-bold text-stone-900">
+                              {formatINR(item.price)}
+                            </td>
+                            <td className="py-3 font-semibold text-emerald-700">
+                              {item.stock}
+                            </td>
+                            <td className="py-3 text-right font-bold text-emerald-600">
+                              {item.trend}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
 
-                {/* Real-Time Live Activity Stream */}
-                <div className="lg:col-span-5 bg-white border border-[#EDE8DF] p-6 rounded-2xl shadow-sm space-y-4">
-                  <div className="flex justify-between items-center border-b border-stone-100 pb-3">
-                    <div>
-                      <h3 className="font-serif font-bold text-base text-stone-900">Live Activity Feed</h3>
-                      <p className="text-[11px] text-stone-400">Real-time store & craftsmanship events</p>
+                {/* Right (5 cols): Real-Time Live Activity Stream */}
+                <div className="lg:col-span-5 bg-white border border-stone-200 p-6 rounded-2xl shadow-xs space-y-4 flex flex-col justify-between">
+                  <div>
+                    <div className="flex justify-between items-center border-b border-stone-100 pb-3">
+                      <div>
+                        <h3 className="font-serif font-bold text-base text-stone-900">Live Activity Feed</h3>
+                        <p className="text-[11px] text-stone-400">Real-time store & craftsmanship events</p>
+                      </div>
+                      {/* Interactive Activity Filter Dropdown */}
+                      <DashboardSelectDropdown
+                        value={activityFilter}
+                        options={ACTIVITY_FILTER_OPTIONS}
+                        onChange={setActivityFilter}
+                        minWidth="w-40"
+                      />
                     </div>
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+
+                    <div className="space-y-4 pt-3 text-xs">
+                      {filteredActivities.length === 0 ? (
+                        <div className="text-center py-6 text-stone-400">
+                          No events in this category yet.
+                        </div>
+                      ) : (
+                        filteredActivities.map((act) => {
+                          const Icon = act.icon;
+                          return (
+                            <div key={act.id} className="flex items-start gap-3">
+                              <div className={`w-8 h-8 rounded-full ${act.iconBg} flex items-center justify-center shrink-0 border`}>
+                                <Icon className="w-4 h-4" />
+                              </div>
+                              <div className="flex-1">
+                                <div className="flex justify-between items-baseline">
+                                  <span className="font-bold text-stone-900">{act.title}</span>
+                                  <span className="text-[10px] text-stone-400">{act.time}</span>
+                                </div>
+                                <p className="text-[11px] text-stone-500 mt-0.5">{act.desc}</p>
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
                   </div>
 
-                  <div className="space-y-3.5 text-xs">
-                    <div className="flex items-start gap-3">
-                      <div className="w-7 h-7 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                      </div>
-                      <div className="flex-1">
-                        <span className="font-bold text-stone-800 block">Order Placed (#AUR-984210)</span>
-                        <p className="text-[11px] text-stone-500">Priya Sharma ordered Celeste Diamond Ring (₹48,900)</p>
-                        <span className="text-[10px] text-stone-400">5 mins ago</span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start gap-3">
-                      <div className="w-7 h-7 rounded-full bg-purple-50 text-purple-700 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <ShieldCheck className="w-3.5 h-3.5" />
-                      </div>
-                      <div className="flex-1">
-                        <span className="font-bold text-stone-800 block">Hallmark 916 Verified</span>
-                        <p className="text-[11px] text-stone-500">Batch #BH-8842 passed purity testing</p>
-                        <span className="text-[10px] text-stone-400">1 hour ago</span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start gap-3">
-                      <div className="w-7 h-7 rounded-full bg-blue-50 text-blue-700 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <Truck className="w-3.5 h-3.5" />
-                      </div>
-                      <div className="flex-1">
-                        <span className="font-bold text-stone-800 block">Dispatched to Hyderabad</span>
-                        <p className="text-[11px] text-stone-500">Order #AUR-773190 handed to insured express courier</p>
-                        <span className="text-[10px] text-stone-400">Yesterday</span>
-                      </div>
-                    </div>
-                  </div>
+                  <button
+                    onClick={() => setActiveTab('orders')}
+                    className="w-full py-2.5 bg-stone-50 hover:bg-stone-100 border border-stone-200 text-stone-700 text-xs font-bold rounded-xl transition-all active:scale-95 text-center mt-2 cursor-pointer"
+                  >
+                    View All Activity &rarr;
+                  </button>
                 </div>
               </div>
             </div>
@@ -1664,7 +2457,7 @@ export default function AdminDashboard() {
 
           {/* TAB 4: COUPONS & DISCOUNTS */}
           {activeTab === 'coupons' && (
-            <div key="coupons" className="space-y-6 animate-tabFadeIn">
+            <div id="marketing-promotions-section" key="coupons" className="space-y-6 animate-tabFadeIn scroll-mt-6">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                   <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[#1A201C]">
