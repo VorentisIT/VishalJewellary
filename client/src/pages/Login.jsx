@@ -71,10 +71,12 @@ export default function Login() {
             }
             return;
           } else if (res.status === 401 || res.status === 400) {
-            // Server explicitly rejected credentials
-            setIsLoading(false);
-            setError(data.message || 'Invalid email or password.');
-            return;
+            // If server requires client-side stored hash verification, proceed to authDb
+            if (!data.fallbackClientAuth) {
+              setIsLoading(false);
+              setError(data.message || 'Invalid email or password.');
+              return;
+            }
           }
         }
       } catch (networkErr) {

@@ -53,28 +53,32 @@ export async function onRequestPost(context) {
     const cleanEmail = email.trim().toLowerCase();
     const cleanPass = password.trim();
 
-    // Check Demo/Production Credentials
+    // Strict Password & User Verification
     let userPayload = null;
 
-    if (cleanEmail === "admin@gmail.com" && cleanPass === "admin123") {
-      userPayload = {
-        userId: "usr_admin_001",
-        name: "Vishal Jewellery Director",
-        email: "admin@gmail.com",
-        role: "admin"
-      };
-    } else if (cleanPass.length >= 4) {
-      const isAdmin = cleanEmail.includes("admin");
-      userPayload = {
-        userId: "usr_" + Math.random().toString(36).substring(2, 9),
-        name: cleanEmail.split("@")[0].toUpperCase(),
-        email: cleanEmail,
-        role: isAdmin ? "admin" : "customer"
-      };
+    if (cleanEmail === "admin@gmail.com") {
+      if (cleanPass === "admin123") {
+        userPayload = {
+          userId: "usr_admin_001",
+          name: "Vishal Jewellery Admin",
+          email: "admin@gmail.com",
+          role: "admin"
+        };
+      } else {
+        return new Response(
+          JSON.stringify({ message: "Incorrect password. Access denied." }),
+          { status: 401, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } }
+        );
+      }
     } else {
+      // For customer accounts on edge serverless function:
+      // Require client-side hash matching or reject unrecognized test credentials
       return new Response(
-        JSON.stringify({ message: "Invalid credentials. Password must be at least 4 characters." }),
-        { status: 401, headers: { "Content-Type": "application/json" } }
+        JSON.stringify({ 
+          fallbackClientAuth: true,
+          message: "Account verification required." 
+        }),
+        { status: 401, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } }
       );
     }
 
