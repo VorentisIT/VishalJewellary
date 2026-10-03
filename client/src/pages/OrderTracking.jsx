@@ -21,17 +21,32 @@ export default function OrderTracking() {
   const { orderId } = useParams();
   const [order, setOrder] = useState(null);
 
-  useEffect(() => {
-    fetch(`/api/orders/${orderId}`)
+  const loadOrderData = () => {
+    // 1. Try to find in localStorage
+    const localOrders = JSON.parse(localStorage.getItem('aurelia_local_orders') || '[]');
+    const match = localOrders.find((o) => o._id === orderId || o.orderNumber === orderId);
+
+    if (match) {
+      setOrder(match);
+      return;
+    }
+
+    // 2. Try fetching from /api/orders
+    fetch('/api/orders')
       .then((res) => res.json())
       .then((data) => {
-        if (data && data.orderNumber) {
-          setOrder(data);
+        const allOrders = Array.isArray(data) ? data : [];
+        const serverMatch = allOrders.find((o) => o._id === orderId || o.orderNumber === orderId);
+
+        if (serverMatch) {
+          setOrder(serverMatch);
+        } else if (localOrders.length > 0) {
+          setOrder(localOrders[0]);
         } else {
-          // Mock order
+          // Fallback Default Order
           setOrder({
             _id: orderId || 'AUR-984210',
-            orderNumber: 'AUR-984210',
+            orderNumber: orderId || 'AUR-984210',
             trackingNumber: 'AUR-EX-887412',
             orderStatus: 'crafting',
             createdAt: new Date().toISOString(),
@@ -57,38 +72,59 @@ export default function OrderTracking() {
         }
       })
       .catch(() => {
-        setOrder({
-          _id: orderId || 'AUR-984210',
-          orderNumber: 'AUR-984210',
-          trackingNumber: 'AUR-EX-887412',
-          orderStatus: 'crafting',
-          createdAt: new Date().toISOString(),
-          totalAmount: 48900,
-          items: [
-            {
-              name: 'Celeste Diamond Ring',
-              price: 48900,
-              quantity: 1,
-              selectedMetal: '18K Gold',
-              selectedSize: '7',
-              image: '/assets/category_rings.jpg'
+        if (localOrders.length > 0) {
+          setOrder(localOrders[0]);
+        } else {
+          setOrder({
+            _id: orderId || 'AUR-984210',
+            orderNumber: orderId || 'AUR-984210',
+            trackingNumber: 'AUR-EX-887412',
+            orderStatus: 'crafting',
+            createdAt: new Date().toISOString(),
+            totalAmount: 48900,
+            items: [
+              {
+                name: 'Celeste Diamond Ring',
+                price: 48900,
+                quantity: 1,
+                selectedMetal: '18K Gold',
+                selectedSize: '7',
+                image: '/assets/category_rings.jpg'
+              }
+            ],
+            shippingAddress: {
+              fullName: 'Priya Sharma',
+              street: '45 Lotus Boulevard, Worli',
+              city: 'Mumbai',
+              state: 'Maharashtra',
+              postalCode: '400018'
             }
-          ],
-          shippingAddress: {
-            fullName: 'Priya Sharma',
-            street: '45 Lotus Boulevard, Worli',
-            city: 'Mumbai',
-            state: 'Maharashtra',
-            postalCode: '400018'
-          }
-        });
+          });
+        }
       });
+  };
+
+  useEffect(() => {
+    loadOrderData();
+
+    // Listen for real-time status updates from Admin Dashboard
+    const handleUpdate = () => {
+      loadOrderData();
+    };
+
+    window.addEventListener('storage', handleUpdate);
+    window.addEventListener('aurelia_order_status_updated', handleUpdate);
+
+    return () => {
+      window.removeEventListener('storage', handleUpdate);
+      window.removeEventListener('aurelia_order_status_updated', handleUpdate);
+    };
   }, [orderId]);
 
   if (!order) {
     return (
-      <div className="min-h-screen bg-ivory flex items-center justify-center">
-        <p className="font-serif text-xl">Loading live order status...</p>
+      <div className="min-h-screen bg-[#F8F5EE] flex items-center justify-center">
+        <p className="font-serif text-xl text-[#102C24]">Loading live order status...</p>
       </div>
     );
   }

@@ -14,54 +14,57 @@ export default function Account() {
   const [activeTab, setActiveTab] = useState('orders');
   const [orders, setOrders] = useState([]);
 
+  const loadAccountOrders = () => {
+    const localOrders = JSON.parse(localStorage.getItem('aurelia_local_orders') || '[]');
+    const seedOrders = [
+      {
+        _id: 'mem_order_1',
+        orderNumber: 'AUR-984210',
+        createdAt: new Date().toISOString(),
+        totalAmount: 48900,
+        orderStatus: 'crafting',
+        items: [
+          {
+            name: 'Celeste Diamond Ring',
+            price: 48900,
+            quantity: 1,
+            selectedMetal: '18K Gold',
+            image: '/assets/category_rings.jpg'
+          }
+        ]
+      }
+    ];
+
+    fetch('/api/orders')
+      .then((res) => res.json())
+      .then((data) => {
+        const serverOrders = Array.isArray(data) ? data : [];
+        const combined = [...localOrders, ...serverOrders, ...seedOrders];
+        const unique = combined.filter((v, i, a) => a.findIndex((t) => t.orderNumber === v.orderNumber || t._id === v._id) === i);
+        setOrders(unique);
+      })
+      .catch(() => {
+        const combined = [...localOrders, ...seedOrders];
+        const unique = combined.filter((v, i, a) => a.findIndex((t) => t.orderNumber === v.orderNumber || t._id === v._id) === i);
+        setOrders(unique);
+      });
+  };
+
   useEffect(() => {
     if (user) {
-      fetch('/api/orders/myorders')
-        .then((res) => res.json())
-        .then((data) => {
-          if (Array.isArray(data) && data.length > 0) {
-            setOrders(data);
-          } else {
-            setOrders([
-              {
-                _id: 'mem_order_1',
-                orderNumber: 'AUR-984210',
-                createdAt: new Date().toISOString(),
-                totalAmount: 48900,
-                orderStatus: 'crafting',
-                items: [
-                  {
-                    name: 'Celeste Diamond Ring',
-                    price: 48900,
-                    quantity: 1,
-                    selectedMetal: '18K Gold',
-                    image: '/assets/category_rings.jpg'
-                  }
-                ]
-              }
-            ]);
-          }
-        })
-        .catch(() => {
-          setOrders([
-            {
-              _id: 'mem_order_1',
-              orderNumber: 'AUR-984210',
-              createdAt: new Date().toISOString(),
-              totalAmount: 48900,
-              orderStatus: 'crafting',
-              items: [
-                {
-                  name: 'Celeste Diamond Ring',
-                  price: 48900,
-                  quantity: 1,
-                  selectedMetal: '18K Gold',
-                  image: '/assets/category_rings.jpg'
-                }
-              ]
-            }
-          ]);
-        });
+      loadAccountOrders();
+
+      const handleUpdate = () => {
+        loadAccountOrders();
+      };
+
+      window.addEventListener('storage', handleUpdate);
+      window.addEventListener('aurelia_order_status_updated', handleUpdate);
+
+      return () => {
+        window.removeEventListener('storage', handleUpdate);
+        window.removeEventListener('aurelia_order_status_updated', handleUpdate);
+      };
     }
   }, [user]);
 
@@ -163,8 +166,8 @@ export default function Account() {
                         </div>
                         <div className="flex items-center gap-3">
                           <span className="font-serif font-bold text-[#202522]">{formatINR(order.totalAmount)}</span>
-                          <span className="bg-[#C49A5A]/10 text-[#C49A5A] font-bold px-2.5 py-0.5 rounded uppercase text-[10px]">
-                            {order.orderStatus}
+                          <span className="bg-[#D96B27]/10 text-[#D96B27] font-bold px-2.5 py-0.5 rounded-full uppercase text-[10px] tracking-wider">
+                            {order.orderStatus ? order.orderStatus.replace(/_/g, ' ') : 'Placed'}
                           </span>
                         </div>
                       </div>
@@ -181,8 +184,8 @@ export default function Account() {
 
                       <div className="pt-2 text-right">
                         <Link
-                          to={`/order-tracking/${order._id}`}
-                          className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#C49A5A] hover:underline uppercase tracking-wider"
+                          to={`/order-tracking/${order.orderNumber || order._id}`}
+                          className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#D96B27] hover:underline uppercase tracking-wider"
                         >
                           View Live 7-Step Timeline <ExternalLink className="w-3.5 h-3.5" />
                         </Link>
